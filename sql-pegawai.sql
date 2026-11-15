@@ -5,13 +5,20 @@
 -- Ref          : bdnqsxwypbrdiwaxydoh
 --
 -- TUJUAN FILE
--- Membuat 5 tabel + 19 fungsi untuk aplikasi pegawai terpisah
+-- Membuat 5 tabel + 20 fungsi + 1 trigger untuk aplikasi pegawai terpisah
 -- (dashboard-pegawai-umkm, "Aplikasi Pegawai — UMKM Tumbuh"): pegawai
 -- menjalankan SOP usaha pemiliknya sebagai daftar centang harian,
 -- mengirim laporan harian (foto kegiatan / kwitansi) ke pemilik,
 -- mencatat presensi masuk/pulang, dan memakai bantuan AI untuk
 -- menulis isiannya. Pemeriksa SOP (pengecek) menandai pekerjaan
 -- yang sudah selesai sebagai sudah dicek.
+-- Struktur usaha (peran-peran yang ditentukan pemilik, misalnya
+-- bendahara) disimpan pemilik di data usahanya sendiri
+-- (umkm_data.data -> 'struktur'); RPC sops_untuk_pegawai
+-- mengembalikannya supaya Aplikasi Pegawai menampilkan peran pegawai
+-- dengan nama dari struktur pemilik, dan trigger cek_peran_pegawai
+-- menjaga agar peran di akses_pegawai hanya berisi peran bawaan
+-- (kas / produksi / stok) atau peran dari struktur pemilik itu.
 -- Aplikasi ini TIDAK menampilkan data keuangan usaha apa pun — tidak
 -- ada angka usaha, rincian pencatatan, atau lokasi di hasil RPC di
 -- bawah. Yang dikembalikan hanya daftar SOP (nama, penanggung jawab,
@@ -35,14 +42,22 @@
 -- dibuat). Nama usaha dibaca dari umkm_data.data -> 'inputs' ->>
 -- 'inNama', dengan cadangan profiles.nama_usaha.
 --
--- PERINGATAN — FILE INI TIDAK MENGUBAH TABEL YANG SUDAH ADA
+-- PERINGATAN — FILE INI MENGUBAH SATU BATASAN DI TABEL YANG SUDAH ADA
 -- File ini hanya membuat 5 tabel BARU (akses_pegawai, sop_jalankan,
 -- laporan_pegawai, presensi, pemakaian_ai), menambah SATU kolom baru
 -- foto_path di akses_pegawai dan TIGA kolom baru (dicek_oleh,
 -- dicek_pada, catatan) di sop_jalankan, membuat SATU bucket privat
--- bukti-pegawai, dan 19 fungsi BARU. Tabel yang sudah ada TIDAK
--- diubah strukturnya selain kolom-kolom itu, TIDAK dihapus, dan data
--- pengguna yang sudah ada TIDAK disentuh.
+-- bukti-pegawai, dan 20 fungsi BARU + 1 trigger BARU. Tabel yang sudah
+-- ada TIDAK diubah strukturnya selain kolom-kolom itu, TIDAK dihapus,
+-- dan data pengguna yang sudah ada TIDAK disentuh — dengan SATU
+-- pengecualian yang disengaja: batasan CHECK akses_pegawai_peran_valid
+-- (peran hanya 'kas'/'produksi'/'stok') DIHAPUS dan diganti trigger
+-- cek_peran_pegawai (lihat bagian 1). Alasannya: CHECK tidak bisa
+-- memakai subquery, jadi CHECK tidak bisa menerima peran dari struktur
+-- usaha yang ditentukan pemilik; trigger-lah yang memeriksa peran
+-- terhadap peran bawaan + struktur pemilik. Peran yang sudah tersimpan
+-- (kas / produksi / stok) tetap lolos trigger — tidak ada baris yang
+-- menjadi tidak sah karena perubahan ini.
 -- Tidak ada baris data yang disisipkan oleh file ini — pemilik
 -- menambahkan pegawai lewat daftar tim di aplikasi utama, setelah
 -- file ini jalan. Pegawai mendaftar sendiri dengan email + kata
@@ -54,6 +69,12 @@
 --     (tanpa created_at). Daftar SOP: data -> 'sops' (array jsonb;
 --     tiap entri {id, nama, pj, tujuan, steps[], dibuat}).
 --     Nama usaha: data -> 'inputs' ->> 'inNama'.
+--     Struktur usaha: data -> 'struktur' (array jsonb; tiap entri
+--     {id, nama, deskripsi, bawaan} — id peran bawaan 'kas',
+--     'produksi', 'stok'; id peran lain ditentukan pemilik, huruf
+--     kecil, contoh 'bendahara'). Kosong/tidak ada bila pemilik
+--     belum menentukan struktur sendiri — saat itu hanya peran
+--     bawaan yang berlaku.
 --   * profiles:        id uuid, nama_usaha text, no_hp text,
 --     kode_marketing text, created_at timestamptz.
 --   * auth.users:      email varchar(255), created_at. Email yang
@@ -65,21 +86,82 @@
 -- ============================================================================
 -- Satu baris = satu pegawai dari satu usaha. Pemilik usaha (pemilik_id)
 -- menambahkan pegawai lewat daftar tim di aplikasi utama: email, nama,
--- dan peran yang sudah dilatih (kas / produksi / stok). Pegawai
--- mendaftar sendiri di aplikasi pegawai dengan email yang sama.
+-- dan peran yang sudah dilatih (peran bawaan kas / produksi / stok,
+-- atau peran dari struktur usaha yang ditentukan pemilik, misalnya
+-- bendahara). Pegawai mendaftar sendiri di aplikasi pegawai dengan
+-- email yang sama.
+-- Peran TIDAK dibatasi CHECK enum di sini: CHECK tidak bisa memakai
+-- subquery sehingga tidak bisa menerima peran dari struktur pemilik.
+-- Penjaganya adalah trigger cek_peran_pegawai di bawah (sebelum
+-- insert/update peran): tiap peran harus peran bawaan atau salah satu
+-- id di umkm_data.data -> 'struktur' milik pemilik itu.
 create table if not exists public.akses_pegawai (
   email text not null primary key,
   pemilik_id uuid not null,
   nama text not null,
   peran text[] not null default '{}'::text[],
   aktif boolean not null default true,
-  created_at timestamptz not null default now(),
-  constraint akses_pegawai_peran_valid
-    check (peran <@ array['kas','produksi','stok']::text[])
+  created_at timestamptz not null default now()
 );
-comment on table public.akses_pegawai is 'Daftar pegawai yang diizinkan masuk Aplikasi Pegawai, beserta peran yang sudah dilatih tiap orang (kas / produksi / stok). Satu baris = satu pegawai. Pemilik menambahkan pegawai lewat daftar tim di aplikasi utama.';
+comment on table public.akses_pegawai is 'Daftar pegawai yang diizinkan masuk Aplikasi Pegawai, beserta peran yang sudah dilatih tiap orang (peran bawaan kas / produksi / stok, atau peran dari struktur usaha yang ditentukan pemilik). Satu baris = satu pegawai. Pemilik menambahkan pegawai lewat daftar tim di aplikasi utama.';
 comment on column public.akses_pegawai.pemilik_id is 'ID akun pemilik usaha (auth.users.id) yang mempekerjakan pegawai ini.';
-comment on column public.akses_pegawai.peran is 'Peran yang sudah dilatih pegawai ini: kas, produksi, dan/atau stok.';
+comment on column public.akses_pegawai.peran is 'Peran yang sudah dilatih pegawai ini: peran bawaan kas, produksi, dan/atau stok, atau peran dari struktur usaha pemilik (misalnya bendahara). Dijaga trigger cek_peran_pegawai, bukan CHECK enum.';
+
+-- Batasan CHECK lama (bila file ini pernah dijalankan sebelumnya):
+-- dihapus supaya peran dari struktur pemilik bisa masuk. Aman
+-- dijalankan ulang; baris lama (kas / produksi / stok) tetap sah.
+alter table public.akses_pegawai
+  drop constraint if exists akses_pegawai_peran_valid;
+
+-- ============================================================================
+-- 1b. TRIGGER cek_peran_pegawai — penjaga peran di akses_pegawai
+-- ============================================================================
+-- PILIHAN YANG DIPAKAI (didokumentasikan): trigger, bukan CHECK dan
+-- bukan validasi aplikasi saja.
+--   * CHECK tidak bisa memakai subquery — CHECK tidak bisa membaca
+--     struktur pemilik, jadi CHECK hanya bisa mengunci tiga peran
+--     bawaan dan akan menolak peran pemilik (bendahara dsb.).
+--   * Validasi di aplikasi saja tidak cukup: tulis lewat SQL langsung
+--     atau klien lain bisa memasukkan peran apa pun tanpa penjaga.
+--   * Trigger BEFORE INSERT OR UPDATE OF peran memeriksa tiap nilai
+--     peran terhadap peran bawaan + id di struktur pemilik
+--     (umkm_data.data -> 'struktur'). Bila pemilik belum menyimpan
+--     struktur (atau belum punya baris data usaha), hanya peran
+--     bawaan yang lolos — perilaku lama tetap berlaku.
+--   * Struktur disimpan di umkm_data.data (BUKAN tabel baru):
+--     daftar peran hanya pernah dibaca bersama data usaha pemilik
+--     (RPC sops_untuk_pegawai sudah membacanya untuk SOP), jadi
+--     tidak perlu tabel + RLS + kebijakan baru; pengorbanannya ialah
+--     peran hidup di dalam jsonb (tanpa kunci asing dan tanpa riwayat
+--     per baris) — wajar untuk label peran yang ditentukan pemilik
+--     dan selalu divalidasi trigger ini sebelum dipakai.
+create or replace function public.cek_peran_pegawai()
+returns trigger
+language plpgsql set search_path = public as $$
+declare
+  v_izin text[] := array['kas','produksi','stok'];
+  v_tambahan text[];
+begin
+  select coalesce(array_agg(x ->> 'id'), '{}'::text[]) into v_tambahan
+  from public.umkm_data ud,
+       jsonb_array_elements(coalesce(ud.data -> 'struktur', '[]'::jsonb)) as x
+  where ud.user_id = new.pemilik_id
+    and x ->> 'id' is not null and x ->> 'id' <> '';
+  v_izin := v_izin || coalesce(v_tambahan, '{}'::text[]);
+  if not (new.peran <@ v_izin) then
+    raise exception 'peran pegawai tidak dikenal: %',
+      (select string_agg(p, ', ') from unnest(new.peran) as p
+        where not (p = any (v_izin)));
+  end if;
+  return new;
+end;
+$$;
+comment on function public.cek_peran_pegawai() is 'Penjaga peran pegawai: tiap peran di akses_pegawai harus peran bawaan (kas / produksi / stok) atau salah satu id di struktur usaha pemilik (umkm_data.data -> struktur). Menggantikan CHECK akses_pegawai_peran_valid yang tidak bisa membaca struktur pemilik.';
+
+drop trigger if exists akses_pegawai_cek_peran on public.akses_pegawai;
+create trigger akses_pegawai_cek_peran
+  before insert or update of peran on public.akses_pegawai
+  for each row execute function public.cek_peran_pegawai();
 
 -- Pas foto pegawai: satu foto wajah per pegawai, dipakai pemilik untuk
 -- mengenali pegawainya. Disimpan di akses_pegawai (bukan di
@@ -231,7 +313,15 @@ grant execute on function public.adalah_pemilik_aplikasi() to authenticated;
 --     cadangan profiles.nama_usaha; null bila belum diisi)
 --   pegawai_nama     : nama pegawai pemanggil (dari akses_pegawai)
 --   peran            : peran yang sudah dilatih pegawai ini
---     (array dari akses_pegawai: 'kas' / 'produksi' / 'stok')
+--     (array dari akses_pegawai: peran bawaan 'kas' / 'produksi' /
+--     'stok', atau peran dari struktur usaha yang ditentukan pemilik,
+--     misalnya 'bendahara')
+--   struktur         : [{id, nama, deskripsi, bawaan}] — daftar peran
+--     usaha pemilik dari umkm_data.data -> 'struktur' (nama + tugas
+--     tiap peran, seperti yang ditentukan pemilik). Aplikasi pegawai
+--     memakai daftar ini untuk memberi nama peran pegawai; bila
+--     pemilik belum menentukan struktur, yang dikembalikan hanya
+--     tiga peran bawaan.
 --   sops             : [{id, nama, pj, tujuan, steps[], pengecek}] —
 --     daftar SOP pemilik dari umkm_data.data -> 'sops'; steps adalah
 --     array langkah (string), urut seperti di aplikasi utama;
@@ -255,6 +345,7 @@ declare
   v_peran text[];
   v_nama_usaha text;
   v_sops jsonb;
+  v_struktur jsonb;
   v_jalankan jsonb;
 begin
   perform public.periksa_pegawai();
@@ -265,13 +356,40 @@ begin
   where a.email = v_email and a.aktif
   limit 1;
 
-  -- Nama usaha + daftar SOP dari data usaha pemilik.
+  -- Nama usaha + daftar SOP + struktur usaha dari data usaha pemilik.
   select
     nullif(ud.data -> 'inputs' ->> 'inNama', ''),
-    coalesce(ud.data -> 'sops', '[]'::jsonb)
-    into v_nama_usaha, v_sops
+    coalesce(ud.data -> 'sops', '[]'::jsonb),
+    coalesce(ud.data -> 'struktur', '[]'::jsonb)
+    into v_nama_usaha, v_sops, v_struktur
   from public.umkm_data ud
   where ud.user_id = v_pemilik_id;
+
+  -- Struktur usaha: hanya entri yang bentuknya benar (id + nama).
+  -- Bila pemilik belum menentukan struktur sendiri, kembalikan tiga
+  -- peran bawaan supaya Aplikasi Pegawai tetap bisa memberi nama
+  -- peran pegawai tanpa peta label di dalam aplikasi pegawai.
+  select coalesce(
+    jsonb_agg(
+      jsonb_build_object(
+        'id', s ->> 'id',
+        'nama', s ->> 'nama',
+        'deskripsi', nullif(s ->> 'deskripsi', ''),
+        'bawaan', coalesce((s ->> 'bawaan')::boolean, false)
+      ) order by (s ->> 'nama')
+    ),
+    '[]'::jsonb
+  ) into v_struktur
+  from jsonb_array_elements(coalesce(v_struktur, '[]'::jsonb)) as s
+  where s ->> 'id' is not null and s ->> 'id' <> ''
+    and s ->> 'nama' is not null and s ->> 'nama' <> '';
+  if coalesce(jsonb_array_length(v_struktur), 0) = 0 then
+    v_struktur := '[
+      {"id":"kas","nama":"Kas","deskripsi":"Menerima pembayaran harian dari pelanggan.","bawaan":true},
+      {"id":"produksi","nama":"Produksi & layanan","deskripsi":"Membuat produk atau melayani pelanggan.","bawaan":true},
+      {"id":"stok","nama":"Stok","deskripsi":"Menjaga ketersediaan dan mencatat bahan atau barang.","bawaan":true}
+    ]'::jsonb;
+  end if;
 
   -- Cadangan nama usaha dari profiles bila data usaha belum diisi.
   if v_nama_usaha is null then
@@ -320,12 +438,13 @@ begin
     'nama_usaha', v_nama_usaha,
     'pegawai_nama', v_nama,
     'peran', coalesce(v_peran, '{}'::text[]),
+    'struktur', coalesce(v_struktur, '[]'::jsonb),
     'sops', coalesce(v_sops, '[]'::jsonb),
     'jalankan_hari_ini', coalesce(v_jalankan, '[]'::jsonb)
   );
 end;
 $$;
-comment on function public.sops_untuk_pegawai() is 'SOP usaha pemilik untuk pegawai yang masuk: nama usaha, nama + peran pegawai, daftar SOP (nama, penanggung jawab, tujuan, langkah, pengecek), dan catatan jalankan pegawai itu hari ini (untuk memulihkan centang + status dicek + catatan). Hanya pegawai aktif. Tanpa data keuangan.';
+comment on function public.sops_untuk_pegawai() is 'SOP usaha pemilik untuk pegawai yang masuk: nama usaha, nama + peran pegawai, struktur usaha pemilik (nama + tugas tiap peran), daftar SOP (nama, penanggung jawab, tujuan, langkah, pengecek), dan catatan jalankan pegawai itu hari ini (untuk memulihkan centang + status dicek + catatan). Hanya pegawai aktif. Tanpa data keuangan.';
 
 revoke execute on function public.sops_untuk_pegawai() from public;
 grant execute on function public.sops_untuk_pegawai() to authenticated;
@@ -697,8 +816,8 @@ on conflict (id) do nothing;
 --           and (storage.foldername(name))[2] = auth.uid()::text)
 --     )
 --   );
---
--- -- ============================================================================
+
+-- ============================================================================
 -- 9. RPC LAPORAN + PAS FOTO
 -- ============================================================================
 -- Mengirim satu laporan (foto kegiatan atau kwitansi) dari pegawai
@@ -1812,12 +1931,33 @@ grant execute on function public.pemakaian_ai_tim_untuk_pemilik() to authenticat
 --     public.pemakaian_ai_tim_untuk_pemilik(); sebagai pemilik —
 --     menampilkan pemakaian tim bulan ini.
 --
+-- 13. Struktur usaha: sebagai pemilik yang sudah menentukan struktur
+--     (umkm_data.data -> 'struktur' berisi entri id 'bendahara'),
+--     panggil sops_untuk_pegawai() sebagai pegawai dengan peran
+--     array['bendahara','kas'] — harus mengembalikan 'struktur'
+--     yang memuat bendahara + 'peran' yang memuat bendahara.
+--     Sebagai pemilik yang belum menentukan struktur, yang
+--     dikembalikan adalah tiga peran bawaan (kas, produksi, stok).
+--
+-- 14. Penjaga peran: insert peran yang tidak dikenal harus gagal —
+--      insert into public.akses_pegawai (email, pemilik_id, nama, peran, aktif)
+--      values ('coba@contoh.id', auth.uid(), 'Coba', array['bukan-peran'], true);
+--     Harus gagal dengan pesan "peran pegawai tidak dikenal".
+--     Peran 'bendahara' harus DITOLAK bila pemilik belum menyimpan
+--     struktur dengan id 'bendahara', dan DITERIMA sesudah struktur
+--     itu disimpan. Peran bawaan ('kas','produksi','stok') selalu
+--     diterima, juga bila pemilik belum punya struktur.
+--
 -- CATATAN:
 -- - Menambah pegawai (oleh pemilik, lewat daftar tim di aplikasi
 --   utama — atau lewat SQL bila perlu):
 --      insert into public.akses_pegawai (email, pemilik_id, nama, peran, aktif)
 --      values ('pegawai@contoh.id', auth.uid(), 'Nama Pegawai',
 --              array['kas','stok'], true);
+--   Peran di sini boleh juga peran dari struktur usaha yang sudah
+--   ditentukan pemilik (misalnya 'bendahara') — trigger
+--   cek_peran_pegawai menolak peran yang tidak ada di struktur
+--   pemilik dan bukan peran bawaan.
 --   Pegawai lalu mendaftar sendiri di Aplikasi Pegawai dengan email
 --   yang sama + kata sandi buatannya sendiri, lalu mengunggah pas
 --   foto wajahnya (wajib sebelum bisa memakai aplikasi).
