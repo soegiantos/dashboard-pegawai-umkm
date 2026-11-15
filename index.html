@@ -22,7 +22,10 @@ header.app-head .lab{color:var(--ink-mut);font-size:.85rem;margin-top:10px;line-
 .card p{color:var(--ink-soft);font-size:.95rem}
 .muted{color:var(--ink-mut);font-size:.88rem}
 label{display:block;font-size:.92rem;color:var(--ink-soft);margin:12px 0 4px}
-input[type=email],input[type=password],input[type=text],select,textarea{width:100%;background:#14110c;border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:11px 12px;font-size:1rem}
+input[type=email],input[type=password],input[type=text],input[type=number],select,textarea{width:100%;background:#14110c;border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:11px 12px;font-size:1rem}
+input[type=file]{width:100%;color:var(--ink-soft);font-size:.95rem}
+.lap-thumb{max-width:100%;border-radius:10px;border:1px solid var(--line)}
+.pasfoto-mini{width:120px;height:120px;object-fit:cover;border-radius:50%;border:2px solid var(--gold)}
 input:focus,select:focus,textarea:focus{outline:2px solid var(--gold);outline-offset:1px}
 textarea{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.82rem;min-height:220px;resize:vertical}
 button{cursor:pointer;font-size:1rem;border-radius:10px;padding:11px 18px;border:1px solid var(--gold);background:var(--gold);color:#1a1405;font-weight:600}
@@ -50,6 +53,8 @@ nav.tabbar button.aktif{background:var(--gold);color:#1a1405;border-color:var(--
 .sop-card .tujuan{color:var(--ink-soft);font-size:.95rem;margin-top:6px}
 .sop-card .kemajuan{color:var(--gold-soft);font-weight:700;margin-top:10px;font-size:.95rem}
 .sop-card .kemajuan.selesai{color:var(--ok)}
+textarea.catatan-sop{min-height:64px}
+.cek-baris{background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:12px}
 .langkah{display:flex;gap:10px;align-items:flex-start;padding:10px 4px;border-top:1px solid var(--line);cursor:pointer}
 .langkah:first-of-type{margin-top:10px}
 .langkah input[type=checkbox]{width:22px;height:22px;flex:0 0 22px;margin-top:2px;accent-color:var(--gold);cursor:pointer}
@@ -98,6 +103,10 @@ nav.tabbar button.aktif{background:var(--gold);color:#1a1405;border-color:var(--
       <input type="email" id="emailDaftar" autocomplete="email" placeholder="contoh: nama@contoh.id">
       <label for="sandiDaftar">Kata sandi (minimal 6 karakter)</label>
       <input type="password" id="sandiDaftar" autocomplete="new-password" placeholder="Buat kata sandi">
+      <label for="fotoDaftar">Pas foto wajah (foto dari kamera atau galeri)</label>
+      <input type="file" id="fotoDaftar" accept="image/*">
+      <div id="fotoDaftarPratinjau" style="margin-top:10px"></div>
+      <p class="muted" style="margin-top:8px">Pemilik usaha membutuhkan foto wajah untuk mengenali pegawainya. Bila belum sempat memilih foto sekarang, pas foto akan diminta saat masuk pertama kali.</p>
       <div class="row" style="margin-top:16px">
         <button id="btnDaftar" type="button">Daftar</button>
         <button id="btnBatalDaftar" type="button" class="ghost">Kembali masuk</button>
@@ -163,6 +172,9 @@ nav.tabbar button.aktif{background:var(--gold);color:#1a1405;border-color:var(--
 
     <nav class="tabbar" id="tabbar">
       <button type="button" data-layar="sop" class="aktif">SOP Saya</button>
+      <button type="button" data-layar="laporan">Laporan</button>
+      <button type="button" data-layar="perluDicek">Perlu dicek</button>
+      <button type="button" data-layar="presensi">Presensi</button>
       <button type="button" data-layar="peran">Peran Saya</button>
       <button type="button" data-layar="profil">Profil</button>
     </nav>
@@ -172,6 +184,64 @@ nav.tabbar button.aktif{background:var(--gold);color:#1a1405;border-color:var(--
         <h2>SOP Saya</h2>
         <p class="muted" id="sopTanggal">Daftar centang hari ini.</p>
         <div id="sopIsi"><p class="muted">Memuat SOP…</p></div>
+      </div>
+    </section>
+
+    <section class="layar" id="layarLaporan">
+      <div class="card">
+        <h2>Laporan</h2>
+        <p>Kirim foto kegiatan atau kwitansi belanja ke pemilik usaha. Foto dikompres di HP Anda sebelum dikirim (biasanya ~150 KB). Batas 5 foto per hari — kwitansi tanpa foto tetap bisa dikirim.</p>
+        <p class="muted" style="margin-top:8px">Jumlah pada kwitansi adalah data kwitansi yang Anda serahkan, bukan data keuangan usaha. Anda hanya melihat laporan Anda sendiri.</p>
+        <h3>Kirim foto</h3>
+        <label for="lapFotoFile">Foto kegiatan</label>
+        <input type="file" id="lapFotoFile" accept="image/*">
+        <p class="muted" id="lapFotoNama"></p>
+        <label for="lapFotoKet">Keterangan foto</label>
+        <input type="text" id="lapFotoKet" placeholder="contoh: Warung sudah rapi sebelum buka">
+        <div class="row" style="margin-top:8px"><button type="button" class="kecil ghost" data-bantu="foto">Bantu tulis</button></div>
+        <label for="lapFotoSop">SOP terkait (boleh kosong)</label>
+        <select id="lapFotoSop"><option value="">Tidak terkait SOP</option></select>
+        <div class="row" style="margin-top:12px"><button id="btnKirimFoto" type="button">Kirim foto</button></div>
+        <h3>Kirim kwitansi</h3>
+        <label for="lapKwitJumlah">Jumlah (Rp)</label>
+        <input type="number" id="lapKwitJumlah" placeholder="contoh: 50000" min="1" step="1">
+        <label for="lapKwitKet">Kwitansi ini untuk apa</label>
+        <input type="text" id="lapKwitKet" placeholder="contoh: Beli gula 5 kg">
+        <div class="row" style="margin-top:8px"><button type="button" class="kecil ghost" data-bantu="kwitansi">Bantu tulis</button></div>
+        <label for="lapKwitFotoFile">Foto kwitansi (boleh kosong)</label>
+        <input type="file" id="lapKwitFotoFile" accept="image/*">
+        <p class="muted" id="lapKwitFotoNama"></p>
+        <label for="lapKwitSop">SOP terkait (boleh kosong)</label>
+        <select id="lapKwitSop"><option value="">Tidak terkait SOP</option></select>
+        <div class="row" style="margin-top:12px"><button id="btnKirimKwitansi" type="button">Kirim kwitansi</button></div>
+      </div>
+      <div class="card">
+        <h2>Laporan saya</h2>
+        <div id="lapIsi"><p class="muted">Memuat laporan…</p></div>
+      </div>
+    </section>
+
+    <section class="layar" id="layarPerluDicek">
+      <div class="card">
+        <h2>Perlu dicek</h2>
+        <p>Pekerjaan pegawai lain yang sudah selesai dan menunggu Anda cek — pemilik usaha menunjuk Anda sebagai pemeriksa SOP itu.</p>
+        <div id="cekIsi"><p class="muted">Memuat daftar…</p></div>
+        <div class="row" style="margin-top:12px"><button id="btnMuatCek" type="button" class="ghost">Muat ulang</button></div>
+      </div>
+    </section>
+
+    <section class="layar" id="layarPresensi">
+      <div class="card">
+        <h2>Presensi</h2>
+        <p class="muted" id="presTanggal">Presensi hari ini.</p>
+        <div id="presStatus"><p class="muted">Memuat presensi…</p></div>
+        <div class="row" style="margin-top:12px">
+          <button id="btnPresMasuk" type="button">Masuk</button>
+          <button id="btnPresPulang" type="button" class="ghost">Pulang</button>
+        </div>
+        <h3>7 hari terakhir</h3>
+        <div id="presRiwayat"><p class="muted">—</p></div>
+        <div class="row" style="margin-top:12px"><button id="btnMuatPres" type="button" class="ghost">Muat ulang</button></div>
       </div>
     </section>
 
@@ -195,6 +265,22 @@ nav.tabbar button.aktif{background:var(--gold);color:#1a1405;border-color:var(--
         </div>
       </div>
     </section>
+  </section>
+
+  <!-- ============ LAYAR LENGKAPI PAS FOTO (gerbang masuk pertama) ============ -->
+  <section id="layarPasFoto" class="hidden">
+    <div class="card">
+      <h2>Lengkapi pas foto</h2>
+      <p>Sebelum memakai aplikasi, unggah <b>pas foto wajah Anda</b>. Pemilik usaha membutuhkan foto wajah untuk mengenali pegawainya — foto ini hanya dilihat pemilik usaha Anda, tidak pernah dilihat pegawai lain.</p>
+      <p class="muted" style="margin-top:8px">Foto dikompres di HP Anda sebelum dikirim (biasanya ~150 KB) dan disimpan di cloud pribadi.</p>
+      <label for="pasFotoFile">Pas foto wajah (foto dari kamera atau galeri)</label>
+      <input type="file" id="pasFotoFile" accept="image/*">
+      <div id="pasFotoPratinjauWadah" style="margin-top:10px"></div>
+      <div class="row" style="margin-top:16px">
+        <button id="btnSimpanPasFoto" type="button">Simpan pas foto</button>
+        <button id="btnKeluarGer" type="button" class="ghost">Keluar</button>
+      </div>
+    </div>
   </section>
 
   <p class="footnote">Aplikasi Pegawai — UMKM Tumbuh<br>Dr. Ir. Soegianto Soelistiono, M.Si. — Lab Sistem Cerdas Fisika, FST Universitas Airlangga<br>Hanya SOP dan daftar centang harian. Tidak ada data keuangan usaha di aplikasi ini.</p>
@@ -227,13 +313,22 @@ var SQL_TEXT =
 "-- Ref          : bdnqsxwypbrdiwaxydoh",
 "--",
 "-- TUJUAN FILE",
-"-- Membuat 2 tabel + 5 fungsi untuk aplikasi pegawai terpisah",
+"-- Membuat 5 tabel + 19 fungsi untuk aplikasi pegawai terpisah",
 "-- (dashboard-pegawai-umkm, \"Aplikasi Pegawai — UMKM Tumbuh\"): pegawai",
-"-- menjalankan SOP usaha pemiliknya sebagai daftar centang harian.",
+"-- menjalankan SOP usaha pemiliknya sebagai daftar centang harian,",
+"-- mengirim laporan harian (foto kegiatan / kwitansi) ke pemilik,",
+"-- mencatat presensi masuk/pulang, dan memakai bantuan AI untuk",
+"-- menulis isiannya. Pemeriksa SOP (pengecek) menandai pekerjaan",
+"-- yang sudah selesai sebagai sudah dicek.",
 "-- Aplikasi ini TIDAK menampilkan data keuangan usaha apa pun — tidak",
 "-- ada angka usaha, rincian pencatatan, atau lokasi di hasil RPC di",
 "-- bawah. Yang dikembalikan hanya daftar SOP (nama, penanggung jawab,",
 "-- tujuan, langkah), nama usaha, dan catatan jalankan hari ini.",
+"-- Satu pengecualian yang dijelaskan di bagian 7: jumlah pada kwitansi",
+"-- adalah data kwitansi itu sendiri yang diserahkan pegawai, BUKAN",
+"-- angka keuangan usaha — pemilik melihatnya sebagai bukti",
+"-- pengeluaran yang dilaporkan pegawainya, pegawai hanya melihat",
+"-- kwitansinya sendiri.",
 "--",
 "-- CARA MENJALANKAN",
 "-- 1. Buka Dashboard proyek di atas -> SQL Editor -> New query.",
@@ -249,9 +344,13 @@ var SQL_TEXT =
 "-- 'inNama', dengan cadangan profiles.nama_usaha.",
 "--",
 "-- PERINGATAN — FILE INI TIDAK MENGUBAH TABEL YANG SUDAH ADA",
-"-- File ini hanya membuat 2 tabel BARU (akses_pegawai, sop_jalankan)",
-"-- dan 5 fungsi BARU. Tabel yang sudah ada TIDAK diubah strukturnya,",
-"-- TIDAK dihapus, dan data pengguna yang sudah ada TIDAK disentuh.",
+"-- File ini hanya membuat 5 tabel BARU (akses_pegawai, sop_jalankan,",
+"-- laporan_pegawai, presensi, pemakaian_ai), menambah SATU kolom baru",
+"-- foto_path di akses_pegawai dan TIGA kolom baru (dicek_oleh,",
+"-- dicek_pada, catatan) di sop_jalankan, membuat SATU bucket privat",
+"-- bukti-pegawai, dan 19 fungsi BARU. Tabel yang sudah ada TIDAK",
+"-- diubah strukturnya selain kolom-kolom itu, TIDAK dihapus, dan data",
+"-- pengguna yang sudah ada TIDAK disentuh.",
 "-- Tidak ada baris data yang disisipkan oleh file ini — pemilik",
 "-- menambahkan pegawai lewat daftar tim di aplikasi utama, setelah",
 "-- file ini jalan. Pegawai mendaftar sendiri dengan email + kata",
@@ -289,6 +388,16 @@ var SQL_TEXT =
 "comment on table public.akses_pegawai is 'Daftar pegawai yang diizinkan masuk Aplikasi Pegawai, beserta peran yang sudah dilatih tiap orang (kas / produksi / stok). Satu baris = satu pegawai. Pemilik menambahkan pegawai lewat daftar tim di aplikasi utama.';",
 "comment on column public.akses_pegawai.pemilik_id is 'ID akun pemilik usaha (auth.users.id) yang mempekerjakan pegawai ini.';",
 "comment on column public.akses_pegawai.peran is 'Peran yang sudah dilatih pegawai ini: kas, produksi, dan/atau stok.';",
+"",
+"-- Pas foto pegawai: satu foto wajah per pegawai, dipakai pemilik untuk",
+"-- mengenali pegawainya. Disimpan di akses_pegawai (bukan di",
+"-- laporan_pegawai). Jalur berkas menunjuk ke bucket privat",
+"-- bukti-pegawai dengan awalan pasfoto/ (lihat bagian 8). Pegawai lama",
+"-- yang belum mengunggah mendapat nilai null — aplikasi utama",
+"-- menampilkan inisial nama sebagai pengganti, bukan gambar rusak.",
+"alter table public.akses_pegawai",
+"  add column if not exists foto_path text;",
+"comment on column public.akses_pegawai.foto_path is 'Jalur pas foto wajah pegawai di bucket privat bukti-pegawai (awalan pasfoto/). Null bila pegawai belum mengunggah — aplikasi utama menampilkan inisial nama sebagai pengganti.';",
 "",
 "alter table public.akses_pegawai enable row level security;",
 "",
@@ -329,6 +438,23 @@ var SQL_TEXT =
 "comment on table public.sop_jalankan is 'Catatan harian jalankan SOP: satu baris per pegawai per SOP per hari. Pegawai mencatat berapa langkah yang sudah dicentang dan apakah SOP selesai hari itu.';",
 "comment on column public.sop_jalankan.langkah_selesai is 'Jumlah langkah SOP yang sudah dicentang pegawai hari itu (0 sampai jumlah langkah SOP).';",
 "comment on column public.sop_jalankan.selesai is 'Benar bila seluruh langkah SOP sudah dicentang hari itu.';",
+"",
+"-- Verifikasi + catatan SOP (item 9): satu baris per pegawai per SOP",
+"-- per hari TETAP dipertahankan — verifikasi tidak memakai tabel baru,",
+"-- melainkan tiga kolom di baris yang sama:",
+"--   dicek_oleh : nama pemeriksa yang menandai pekerjaan ini sudah",
+"--     dicek (\"Pemilik\" bila yang memeriksa pemilik usaha; nama",
+"--     pegawai bila pemeriksa yang ditunjuk di SOP). Null = belum dicek.",
+"--   dicek_pada : kapan ditandai sudah dicek (null bila belum dicek).",
+"--   catatan    : catatan singkat pegawai untuk SOP hari itu (boleh",
+"--     kosong; ditulis pegawai, boleh dibantu AI — lihat bagian 11).",
+"alter table public.sop_jalankan",
+"  add column if not exists dicek_oleh text,",
+"  add column if not exists dicek_pada timestamptz,",
+"  add column if not exists catatan text;",
+"comment on column public.sop_jalankan.dicek_oleh is 'Nama pemeriksa yang menandai pekerjaan ini sudah dicek (Pemilik bila pemilik usaha; nama pegawai bila pemeriksa yang ditunjuk di SOP). Null bila belum dicek.';",
+"comment on column public.sop_jalankan.dicek_pada is 'Waktu pekerjaan ditandai sudah dicek. Null bila belum dicek.';",
+"comment on column public.sop_jalankan.catatan is 'Catatan singkat pegawai untuk SOP hari itu (boleh kosong).';",
 "",
 "alter table public.sop_jalankan enable row level security;",
 "",
@@ -414,11 +540,15 @@ var SQL_TEXT =
 "--   pegawai_nama     : nama pegawai pemanggil (dari akses_pegawai)",
 "--   peran            : peran yang sudah dilatih pegawai ini",
 "--     (array dari akses_pegawai: 'kas' / 'produksi' / 'stok')",
-"--   sops             : [{id, nama, pj, tujuan, steps[]}] — daftar SOP",
-"--     pemilik dari umkm_data.data -> 'sops'; steps adalah array langkah",
-"--     (string), urut seperti di aplikasi utama.",
-"--   jalankan_hari_ini: [{sop_id, langkah_selesai, selesai}] — catatan",
-"--     pegawai ini hari ini saja, supaya daftar centang tampil sama",
+"--   sops             : [{id, nama, pj, tujuan, steps[], pengecek}] —",
+"--     daftar SOP pemilik dari umkm_data.data -> 'sops'; steps adalah",
+"--     array langkah (string), urut seperti di aplikasi utama;",
+"--     pengecek adalah nama orang yang memeriksa pekerjaan SOP ini",
+"--     (null/kosong bila belum diisi — di aplikasi pegawai dan utama",
+"--     ditampilkan sebagai \"Pemilik\").",
+"--   jalankan_hari_ini: [{sop_id, langkah_selesai, selesai, dicek_oleh,",
+"--     dicek_pada, catatan}] — catatan pegawai ini hari ini saja,",
+"--     supaya daftar centang + status dicek + catatan tampil sama",
 "--     setelah halaman dimuat ulang.",
 "-- Hanya pegawai aktif. Pemilik usaha yang memanggil tanpa baris",
 "-- akses_pegawai mendapat error — pemilik memantau tim lewat aplikasi",
@@ -465,6 +595,7 @@ var SQL_TEXT =
 "        'nama', s ->> 'nama',",
 "        'pj', s ->> 'pj',",
 "        'tujuan', s ->> 'tujuan',",
+"        'pengecek', nullif(s ->> 'pengecek', ''),",
 "        'steps', coalesce(s -> 'steps', '[]'::jsonb)",
 "      ) order by (s ->> 'nama')",
 "    ),",
@@ -480,7 +611,10 @@ var SQL_TEXT =
 "      jsonb_build_object(",
 "        'sop_id', j.sop_id,",
 "        'langkah_selesai', j.langkah_selesai,",
-"        'selesai', j.selesai",
+"        'selesai', j.selesai,",
+"        'dicek_oleh', j.dicek_oleh,",
+"        'dicek_pada', j.dicek_pada,",
+"        'catatan', j.catatan",
 "      )",
 "    ),",
 "    '[]'::jsonb",
@@ -499,13 +633,13 @@ var SQL_TEXT =
 "  );",
 "end;",
 "$$;",
-"comment on function public.sops_untuk_pegawai() is 'SOP usaha pemilik untuk pegawai yang masuk: nama usaha, nama + peran pegawai, daftar SOP (nama, penanggung jawab, tujuan, langkah), dan catatan jalankan pegawai itu hari ini (untuk memulihkan centang). Hanya pegawai aktif. Tanpa data keuangan.';",
+"comment on function public.sops_untuk_pegawai() is 'SOP usaha pemilik untuk pegawai yang masuk: nama usaha, nama + peran pegawai, daftar SOP (nama, penanggung jawab, tujuan, langkah, pengecek), dan catatan jalankan pegawai itu hari ini (untuk memulihkan centang + status dicek + catatan). Hanya pegawai aktif. Tanpa data keuangan.';",
 "",
 "revoke execute on function public.sops_untuk_pegawai() from public;",
 "grant execute on function public.sops_untuk_pegawai() to authenticated;",
 "",
 "-- ============================================================================",
-"-- 5. RPC catat_sop_jalankan(p_sop_id, p_langkah_selesai, p_selesai)",
+"-- 5. RPC catat_sop_jalankan(p_sop_id, p_langkah_selesai, p_selesai, p_catatan)",
 "--    — simpan / perbarui catatan harian satu SOP",
 "-- ============================================================================",
 "-- Menyimpan berapa langkah SOP yang sudah dicentang pegawai hari ini.",
@@ -515,15 +649,23 @@ var SQL_TEXT =
 "-- p_langkah_selesai dibatasi 0 sampai jumlah langkah SOP (bila SOP",
 "-- ditemukan di data usaha pemilik); p_selesai benar hanya bila",
 "-- seluruh langkah sudah dicentang.",
+"-- p_catatan (opsional, maksimal 500 karakter): catatan singkat pegawai",
+"-- untuk SOP hari itu. Bila tidak dikirim (null), catatan lama",
+"-- dipertahankan; bila dikirim (termasuk string kosong), catatan",
+"-- diganti. Panggilan lama dengan 3 argumen tetap berfungsi karena",
+"-- parameter ke-4 punya nilai default.",
 "-- Mengembalikan satu objek JSON: {sop_id, tanggal, langkah_selesai,",
-"-- selesai}. Hanya pegawai aktif; pegawai hanya mencatat atas namanya",
-"-- sendiri (pegawai_email selalu diambil dari pemanggil, bukan dari",
-"-- argumen — argumen tidak bisa dipakai untuk mencatat atas nama orang",
-"-- lain).",
+"-- selesai, dicek_oleh, dicek_pada, catatan} — kolom verifikasi ikut",
+"-- dikembalikan supaya aplikasi pegawai memulihkan keadaan yang sama",
+"-- persis setelah muat ulang. Hanya pegawai aktif; pegawai hanya",
+"-- mencatat atas namanya sendiri (pegawai_email selalu diambil dari",
+"-- pemanggil, bukan dari argumen — argumen tidak bisa dipakai untuk",
+"-- mencatat atas nama orang lain).",
 "create or replace function public.catat_sop_jalankan(",
 "  p_sop_id text,",
 "  p_langkah_selesai int,",
-"  p_selesai boolean",
+"  p_selesai boolean,",
+"  p_catatan text default null",
 ")",
 "returns jsonb",
 "language plpgsql security definer set search_path = public as $$",
@@ -534,6 +676,9 @@ var SQL_TEXT =
 "  v_langkah int;",
 "  v_selesai boolean;",
 "  v_tanggal date := current_date;",
+"  v_dicek_oleh text;",
+"  v_dicek_pada timestamptz;",
+"  v_catatan text;",
 "begin",
 "  perform public.periksa_pegawai();",
 "",
@@ -563,25 +708,38 @@ var SQL_TEXT =
 "    v_selesai := coalesce(p_selesai, false);",
 "  end if;",
 "",
+"  if p_catatan is not null and char_length(p_catatan) > 500 then",
+"    raise exception 'Catatan terlalu panjang (maksimal 500 karakter).';",
+"  end if;",
+"",
 "  insert into public.sop_jalankan",
-"    (pegawai_email, pemilik_id, sop_id, tanggal, langkah_selesai, selesai)",
-"  values (v_email, v_pemilik_id, p_sop_id, v_tanggal, v_langkah, v_selesai)",
+"    (pegawai_email, pemilik_id, sop_id, tanggal, langkah_selesai, selesai, catatan)",
+"  values (v_email, v_pemilik_id, p_sop_id, v_tanggal, v_langkah, v_selesai, p_catatan)",
 "  on conflict (pegawai_email, sop_id, tanggal)",
 "  do update set langkah_selesai = excluded.langkah_selesai,",
-"                selesai = excluded.selesai;",
+"                selesai = excluded.selesai,",
+"                catatan = coalesce(excluded.catatan, sop_jalankan.catatan);",
+"",
+"  select j.dicek_oleh, j.dicek_pada, j.catatan",
+"    into v_dicek_oleh, v_dicek_pada, v_catatan",
+"  from public.sop_jalankan j",
+"  where j.pegawai_email = v_email and j.sop_id = p_sop_id and j.tanggal = v_tanggal;",
 "",
 "  return jsonb_build_object(",
 "    'sop_id', p_sop_id,",
 "    'tanggal', v_tanggal,",
 "    'langkah_selesai', v_langkah,",
-"    'selesai', v_selesai",
+"    'selesai', v_selesai,",
+"    'dicek_oleh', v_dicek_oleh,",
+"    'dicek_pada', v_dicek_pada,",
+"    'catatan', v_catatan",
 "  );",
 "end;",
 "$$;",
-"comment on function public.catat_sop_jalankan(text, integer, boolean) is 'Simpan/perbarui catatan harian satu SOP untuk pegawai yang masuk: jumlah langkah yang sudah dicentang + apakah SOP selesai hari itu. Satu baris per pegawai per SOP per hari (upsert). Hanya pegawai aktif; pegawai hanya mencatat atas namanya sendiri.';",
+"comment on function public.catat_sop_jalankan(text, integer, boolean, text) is 'Simpan/perbarui catatan harian satu SOP untuk pegawai yang masuk: jumlah langkah yang sudah dicentang + apakah SOP selesai hari itu + catatan singkat (opsional, maksimal 500 karakter). Satu baris per pegawai per SOP per hari (upsert). Hanya pegawai aktif; pegawai hanya mencatat atas namanya sendiri.';",
 "",
-"revoke execute on function public.catat_sop_jalankan(text, integer, boolean) from public;",
-"grant execute on function public.catat_sop_jalankan(text, integer, boolean) to authenticated;",
+"revoke execute on function public.catat_sop_jalankan(text, integer, boolean, text) from public;",
+"grant execute on function public.catat_sop_jalankan(text, integer, boolean, text) to authenticated;",
 "",
 "-- ============================================================================",
 "-- 6. RPC ringkasan_tim_untuk_pemilik() — siapa menjalankan SOP apa, kapan",
@@ -597,6 +755,13 @@ var SQL_TEXT =
 "--   langkah_selesai: jumlah langkah yang dicentang hari itu",
 "--   selesai        : apakah SOP selesai hari itu",
 "--   dicatat_pada   : waktu baris pertama kali dicatat",
+"--   dicek_oleh     : nama pemeriksa yang menandai pekerjaan ini sudah",
+"--     dicek (null bila belum dicek; \"Pemilik\" bila pemilik usaha)",
+"--   dicek_pada     : waktu pekerjaan ditandai sudah dicek (null bila",
+"--     belum dicek)",
+"--   foto_path      : jalur pas foto wajah pegawai (dari akses_pegawai;",
+"--     null bila pegawai belum mengunggah — aplikasi utama menampilkan",
+"--     inisial nama sebagai pengganti)",
 "-- Setiap pemilik usaha yang terautentikasi boleh memanggil dan hanya",
 "-- melihat log timnya sendiri (dibatasi pemilik_id = auth.uid()).",
 "-- Pemanggil yang belum punya pegawai mendapat himpunan kosong, bukan",
@@ -606,12 +771,15 @@ var SQL_TEXT =
 "returns table(",
 "  pegawai_nama text,",
 "  pegawai_email text,",
+"  foto_path text,",
 "  sop_id text,",
 "  sop_nama text,",
 "  tanggal date,",
 "  langkah_selesai int,",
 "  selesai boolean,",
-"  dicatat_pada timestamptz",
+"  dicatat_pada timestamptz,",
+"  dicek_oleh text,",
+"  dicek_pada timestamptz",
 ")",
 "language plpgsql security definer set search_path = public as $$",
 "declare",
@@ -621,6 +789,7 @@ var SQL_TEXT =
 "  select",
 "    a.nama::text as pegawai_nama,",
 "    j.pegawai_email::text as pegawai_email,",
+"    a.foto_path::text as foto_path,",
 "    j.sop_id::text as sop_id,",
 "    (",
 "      select s ->> 'nama'",
@@ -633,7 +802,9 @@ var SQL_TEXT =
 "    j.tanggal,",
 "    j.langkah_selesai,",
 "    j.selesai,",
-"    j.created_at as dicatat_pada",
+"    j.created_at as dicatat_pada,",
+"    j.dicek_oleh,",
+"    j.dicek_pada",
 "  from public.sop_jalankan j",
 "  left join public.akses_pegawai a on a.email = j.pegawai_email",
 "  where j.pemilik_id = v_pemilik_id",
@@ -641,27 +812,1232 @@ var SQL_TEXT =
 "  limit 200;",
 "end;",
 "$$;",
-"comment on function public.ringkasan_tim_untuk_pemilik() is 'Ringkasan tim untuk setiap pemilik usaha: siapa (nama + email pegawai) menjalankan SOP apa (nama SOP), kapan, berapa langkah, dan apakah selesai. Hanya log tim pemanggil sendiri (pemilik_id = auth.uid()); pemanggil tanpa pegawai mendapat himpunan kosong, bukan error. Maks 200 baris, paling baru dulu.';",
+"comment on function public.ringkasan_tim_untuk_pemilik() is 'Ringkasan tim untuk setiap pemilik usaha: siapa (nama + email + pas foto pegawai) menjalankan SOP apa (nama SOP), kapan, berapa langkah, apakah selesai, dan siapa yang memeriksanya (dicek_oleh, dicek_pada). Hanya log tim pemanggil sendiri (pemilik_id = auth.uid()); pemanggil tanpa pegawai mendapat himpunan kosong, bukan error. Maks 200 baris, paling baru dulu.';",
 "",
 "revoke execute on function public.ringkasan_tim_untuk_pemilik() from public;",
 "grant execute on function public.ringkasan_tim_untuk_pemilik() to authenticated;",
+"",
+"-- ============================================================================",
+"-- 7. TABEL laporan_pegawai — laporan harian pegawai (foto / kwitansi)",
+"-- ============================================================================",
+"-- Satu baris = satu laporan yang dikirim pegawai ke pemilik usahanya.",
+"--   jenis      : 'foto' (foto kegiatan — misal kondisi warung, hasil",
+"--     kerja) atau 'kwitansi' (bukti belanja / bayar dengan jumlah Rp).",
+"--   jumlah     : hanya untuk kwitansi (jumlah Rp yang tertulis di",
+"--     kwitansi itu). PRIVASI: jumlah ini adalah data kwitansi itu",
+"--     sendiri yang diserahkan pegawai, BUKAN angka keuangan usaha —",
+"--     pegawai hanya melihat kwitansinya sendiri, pemilik melihat",
+"--     kwitansi pegawainya sendiri. Foto tidak punya jumlah (null).",
+"--   file_path  : jalur berkas foto di bucket privat bukti-pegawai",
+"--     (lihat bagian 8); null bila laporan tanpa foto.",
+"--   dicatat    : true bila pemilik sudah mencatat kwitansi ini ke",
+"--     dalam catatannya (diubah pemilik lewat RPC tandai, bagian 9);",
+"--     foto tidak pernah dicatat (tetap false).",
+"--   tanggal    : tanggal laporan dikirim (dipakai batas foto harian).",
+"-- Batas foto harian ditegakkan DI DALAM RPC kirim (bagian 9), bukan",
+"-- di tabel: maks 5 foto per pegawai per hari. Pas foto TIDAK dihitung",
+"-- ke batas ini — pas foto sekali per pegawai, bukan laporan harian.",
+"-- Retensi: foto laporan disimpan 12 bulan; pemilik memeriksa bila",
+"-- penyimpanan mulai penuh (tidak ada hapus otomatis di build ini).",
+"create table if not exists public.laporan_pegawai (",
+"  id uuid not null primary key default gen_random_uuid(),",
+"  pegawai_email text not null,",
+"  pemilik_id uuid not null,",
+"  jenis text not null check (jenis in ('foto','kwitansi')),",
+"  keterangan text not null,",
+"  jumlah numeric,",
+"  file_path text,",
+"  sop_id text,",
+"  tanggal date not null default current_date,",
+"  dicatat boolean not null default false,",
+"  dicatat_pada timestamptz,",
+"  created_at timestamptz not null default now()",
+");",
+"comment on table public.laporan_pegawai is 'Laporan harian pegawai ke pemilik usaha: foto kegiatan atau kwitansi belanja/bayar. Jumlah hanya ada pada kwitansi — itu data kwitansi yang diserahkan pegawai, bukan angka keuangan usaha.';",
+"comment on column public.laporan_pegawai.jumlah is 'Jumlah Rp pada kwitansi (hanya jenis kwitansi; null untuk foto). Data kwitansi yang diserahkan pegawai, bukan angka keuangan usaha.';",
+"comment on column public.laporan_pegawai.file_path is 'Jalur foto di bucket privat bukti-pegawai (awalan pemilik_id/email). Null bila laporan tanpa foto.';",
+"comment on column public.laporan_pegawai.dicatat is 'Benar bila pemilik sudah mencatat kwitansi ini ke dalam catatannya (diubah pemilik lewat RPC tandai_laporan_dicatat). Foto tidak pernah dicatat.';",
+"comment on column public.laporan_pegawai.tanggal is 'Tanggal laporan dikirim; dipakai batas 5 foto per pegawai per hari.';",
+"",
+"alter table public.laporan_pegawai enable row level security;",
+"",
+"-- Membaca: pegawai hanya membaca laporannya sendiri; pemilik usaha",
+"-- membaca laporan pegawai usahanya sendiri.",
+"drop policy if exists \"laporan baca sendiri\" on public.laporan_pegawai;",
+"create policy \"laporan baca sendiri\" on public.laporan_pegawai",
+"  for select using (auth.jwt() ->> 'email' = pegawai_email);",
+"",
+"drop policy if exists \"laporan baca pemilik\" on public.laporan_pegawai;",
+"create policy \"laporan baca pemilik\" on public.laporan_pegawai",
+"  for select using (auth.uid() = pemilik_id);",
+"",
+"-- Menulis: pegawai hanya menulis laporan atas namanya sendiri",
+"-- (RPC kirim tetap memeriksa izin + batas foto harian di dalam).",
+"drop policy if exists \"laporan tulis sendiri\" on public.laporan_pegawai;",
+"create policy \"laporan tulis sendiri\" on public.laporan_pegawai",
+"  for insert to authenticated",
+"  with check (auth.jwt() ->> 'email' = pegawai_email);",
+"",
+"-- Mengubah: hanya pemilik usaha, untuk laporan pegawai usahanya",
+"-- (menandai kwitansi sudah dicatat — lihat RPC tandai, bagian 9).",
+"drop policy if exists \"laporan ubah pemilik\" on public.laporan_pegawai;",
+"create policy \"laporan ubah pemilik\" on public.laporan_pegawai",
+"  for update to authenticated",
+"  using (auth.uid() = pemilik_id)",
+"  with check (auth.uid() = pemilik_id);",
+"",
+"-- ============================================================================",
+"-- 8. BUCKET PRIVAT bukti-pegawai — foto laporan + pas foto",
+"-- ============================================================================",
+"-- Satu bucket privat untuk SEMUA foto pegawai (bukan bucket publik —",
+"-- foto hanya dibuka lewat tautan bertanda tangan 1 jam, tidak pernah",
+"-- lewat tautan publik).",
+"--   Foto laporan : <pemilik_id>/<pegawai_email>/<uuid>.jpg",
+"--   Pas foto     : pasfoto/<pemilik_id>/<pegawai_email>/<uuid>.jpg",
+"-- Folder pertama membedakan pemilik (foto laporan) atau awalan",
+"-- pasfoto/; kebijakan di bawah membatasi berdasarkan folder itu.",
+"-- Foto laporan dikompres di HP pegawai sebelum diunggah (kanvas maks",
+"-- 1200px, JPEG 0.7, target ~100–300 KB, tipikal ~150 KB). Pas foto",
+"-- sekali per pegawai (~150 KB sekali) — biaya penyimpanannya dapat",
+"-- diabaikan (~Rp8 sekali per pegawai) dan TIDAK dihitung ke batas",
+"-- foto harian.",
+"insert into storage.buckets (id, name, public)",
+"values ('bukti-pegawai', 'bukti-pegawai', false)",
+"on conflict (id) do nothing;",
+"",
+"alter table storage.objects enable row level security;",
+"",
+"-- Foto laporan — pegawai mengunggah hanya ke folder pemiliknya",
+"-- sendiri, atas namanya sendiri (pemilik_id diambil dari baris",
+"-- akses_pegawai pegawai itu; perbandingan sebagai teks supaya jalur",
+"-- yang bukan UUID — misal awalan pasfoto/ — sekadar tidak cocok,",
+"-- bukan galat).",
+"drop policy if exists \"bukti pegawai laporan unggah sendiri\" on storage.objects;",
+"create policy \"bukti pegawai laporan unggah sendiri\" on storage.objects",
+"  for insert to authenticated",
+"  with check (",
+"    bucket_id = 'bukti-pegawai'",
+"    and (storage.foldername(name))[2] = auth.jwt() ->> 'email'",
+"    and (storage.foldername(name))[1] = (",
+"      select a.pemilik_id::text from public.akses_pegawai a",
+"      where a.email = auth.jwt() ->> 'email' and a.aktif",
+"      limit 1",
+"    )",
+"  );",
+"",
+"-- Foto laporan — pegawai membaca hanya fotonya sendiri.",
+"drop policy if exists \"bukti pegawai laporan baca sendiri\" on storage.objects;",
+"create policy \"bukti pegawai laporan baca sendiri\" on storage.objects",
+"  for select using (",
+"    bucket_id = 'bukti-pegawai'",
+"    and (storage.foldername(name))[2] = auth.jwt() ->> 'email'",
+"    and (storage.foldername(name))[1] = (",
+"      select a.pemilik_id::text from public.akses_pegawai a",
+"      where a.email = auth.jwt() ->> 'email' and a.aktif",
+"      limit 1",
+"    )",
+"  );",
+"",
+"-- Pas foto — pegawai mengunggah hanya pas fotonya sendiri.",
+"drop policy if exists \"bukti pegawai pasfoto unggah sendiri\" on storage.objects;",
+"create policy \"bukti pegawai pasfoto unggah sendiri\" on storage.objects",
+"  for insert to authenticated",
+"  with check (",
+"    bucket_id = 'bukti-pegawai'",
+"    and (storage.foldername(name))[1] = 'pasfoto'",
+"    and (storage.foldername(name))[3] = auth.jwt() ->> 'email'",
+"    and (storage.foldername(name))[2] = (",
+"      select a.pemilik_id::text from public.akses_pegawai a",
+"      where a.email = auth.jwt() ->> 'email' and a.aktif",
+"      limit 1",
+"    )",
+"  );",
+"",
+"-- Pas foto — pegawai membaca hanya pas fotonya sendiri (TIDAK pernah",
+"-- pas foto pegawai lain).",
+"drop policy if exists \"bukti pegawai pasfoto baca sendiri\" on storage.objects;",
+"create policy \"bukti pegawai pasfoto baca sendiri\" on storage.objects",
+"  for select using (",
+"    bucket_id = 'bukti-pegawai'",
+"    and (storage.foldername(name))[1] = 'pasfoto'",
+"    and (storage.foldername(name))[3] = auth.jwt() ->> 'email'",
+"    and (storage.foldername(name))[2] = (",
+"      select a.pemilik_id::text from public.akses_pegawai a",
+"      where a.email = auth.jwt() ->> 'email' and a.aktif",
+"      limit 1",
+"    )",
+"  );",
+"",
+"-- Semua foto — pemilik usaha membaca hanya foto pegawai usahanya",
+"-- sendiri (foto laporan di folder pemilik_id-nya, pas foto di folder",
+"-- pasfoto/pemilik_id-nya).",
+"drop policy if exists \"bukti pegawai pemilik baca tim\" on storage.objects;",
+"create policy \"bukti pegawai pemilik baca tim\" on storage.objects",
+"  for select using (",
+"    bucket_id = 'bukti-pegawai'",
+"    and (",
+"      (storage.foldername(name))[1] = auth.uid()::text",
+"      or ((storage.foldername(name))[1] = 'pasfoto'",
+"          and (storage.foldername(name))[2] = auth.uid()::text)",
+"    )",
+"  );",
+"",
+"-- ============================================================================",
+"-- 9. RPC LAPORAN + PAS FOTO",
+"-- ============================================================================",
+"-- Mengirim satu laporan (foto kegiatan atau kwitansi) dari pegawai",
+"-- yang masuk ke pemilik usahanya.",
+"--   p_jenis     : 'foto' atau 'kwitansi'",
+"--   p_keterangan: keterangan laporan (wajib diisi)",
+"--   p_jumlah    : jumlah Rp — wajib > 0 bila jenis kwitansi; diabaikan",
+"--     (disimpan null) bila jenis foto",
+"--   p_file_path : jalur foto di bucket bukti-pegawai — wajib bila jenis",
+"--     foto; boleh kosong bila kwitansi tanpa foto",
+"--   p_sop_id    : SOP terkait (boleh kosong)",
+"-- Batas foto harian: maks 5 foto per pegawai per hari — bila sudah 5",
+"-- laporan jenis foto hari ini, RPC berhenti dengan pesan",
+"-- \"Batas foto hari ini sudah tercapai (5 foto).\" (pas foto TIDAK",
+"-- dihitung — pas foto sekali per pegawai, lewat RPC simpan_pas_foto",
+"-- di bawah, bukan lewat RPC ini).",
+"-- pegawai_email + pemilik_id selalu diambil dari pemanggil, bukan",
+"-- dari argumen. Mengembalikan satu objek JSON: {id, jenis,",
+"-- keterangan, jumlah, file_path, sop_id, tanggal, dicatat}.",
+"create or replace function public.kirim_laporan_pegawai(",
+"  p_jenis text,",
+"  p_keterangan text,",
+"  p_jumlah numeric,",
+"  p_file_path text,",
+"  p_sop_id text",
+")",
+"returns jsonb",
+"language plpgsql security definer set search_path = public as $$",
+"declare",
+"  v_email text := auth.jwt() ->> 'email';",
+"  v_pemilik_id uuid;",
+"  v_foto_hari_ini int;",
+"  v_id uuid;",
+"  v_keterangan text := btrim(coalesce(p_keterangan, ''));",
+"  v_file_path text := nullif(btrim(coalesce(p_file_path, '')), '');",
+"  v_sop_id text := nullif(btrim(coalesce(p_sop_id, '')), '');",
+"  v_jumlah numeric;",
+"begin",
+"  perform public.periksa_pegawai();",
+"",
+"  select a.pemilik_id into v_pemilik_id",
+"  from public.akses_pegawai a",
+"  where a.email = v_email and a.aktif",
+"  limit 1;",
+"",
+"  if p_jenis is null or p_jenis not in ('foto', 'kwitansi') then",
+"    raise exception 'Jenis laporan tidak dikenal.';",
+"  end if;",
+"  if v_keterangan = '' then",
+"    raise exception 'Keterangan laporan belum diisi.';",
+"  end if;",
+"",
+"  if p_jenis = 'kwitansi' then",
+"    if p_jumlah is null or p_jumlah <= 0 then",
+"      raise exception 'Jumlah kwitansi harus lebih dari Rp 0.';",
+"    end if;",
+"    v_jumlah := p_jumlah;",
+"  else",
+"    v_jumlah := null;",
+"    if v_file_path is null then",
+"      raise exception 'Foto laporan belum diunggah.';",
+"    end if;",
+"  end if;",
+"",
+"  if p_jenis = 'foto' then",
+"    select count(*) into v_foto_hari_ini",
+"    from public.laporan_pegawai l",
+"    where l.pegawai_email = v_email",
+"      and l.jenis = 'foto'",
+"      and l.tanggal = current_date;",
+"    if v_foto_hari_ini >= 5 then",
+"      raise exception 'Batas foto hari ini sudah tercapai (5 foto).';",
+"    end if;",
+"  end if;",
+"",
+"  insert into public.laporan_pegawai",
+"    (pegawai_email, pemilik_id, jenis, keterangan, jumlah, file_path, sop_id)",
+"  values (v_email, v_pemilik_id, p_jenis, v_keterangan, v_jumlah, v_file_path, v_sop_id)",
+"  returning id into v_id;",
+"",
+"  return jsonb_build_object(",
+"    'id', v_id,",
+"    'jenis', p_jenis,",
+"    'keterangan', v_keterangan,",
+"    'jumlah', v_jumlah,",
+"    'file_path', v_file_path,",
+"    'sop_id', v_sop_id,",
+"    'tanggal', current_date,",
+"    'dicatat', false",
+"  );",
+"end;",
+"$$;",
+"comment on function public.kirim_laporan_pegawai(text, text, numeric, text, text) is 'Kirim satu laporan pegawai (foto kegiatan / kwitansi) ke pemilik usaha. Hanya pegawai aktif; pegawai hanya mengirim atas namanya sendiri. Batas 5 foto per pegawai per hari (pas foto tidak dihitung). Jumlah wajib > 0 untuk kwitansi; foto wajib membawa jalur foto.';",
+"",
+"revoke execute on function public.kirim_laporan_pegawai(text, text, numeric, text, text) from public;",
+"grant execute on function public.kirim_laporan_pegawai(text, text, numeric, text, text) to authenticated;",
+"",
+"-- Laporan pegawai yang masuk, paling baru dulu, maks 200 baris:",
+"--   id, jenis, keterangan, jumlah, file_path, sop_id, sop_nama,",
+"--   tanggal, dicatat.",
+"-- sop_nama dicari di umkm_data.data -> 'sops'; null bila SOP sudah",
+"-- dihapus pemilik, sop_id tetap tampil. Hanya laporan pegawai itu",
+"-- sendiri — pegawai TIDAK PERNAH melihat laporan pegawai lain.",
+"create or replace function public.laporan_saya()",
+"returns jsonb",
+"language plpgsql security definer set search_path = public as $$",
+"declare",
+"  v_email text := auth.jwt() ->> 'email';",
+"  v_hasil jsonb;",
+"begin",
+"  perform public.periksa_pegawai();",
+"",
+"  select coalesce(",
+"    jsonb_agg(",
+"      jsonb_build_object(",
+"        'id', x.id,",
+"        'jenis', x.jenis,",
+"        'keterangan', x.keterangan,",
+"        'jumlah', x.jumlah,",
+"        'file_path', x.file_path,",
+"        'sop_id', x.sop_id,",
+"        'sop_nama', x.sop_nama,",
+"        'tanggal', x.tanggal,",
+"        'dicatat', x.dicatat",
+"      ) order by x.tanggal desc, x.created_at desc",
+"    ),",
+"    '[]'::jsonb",
+"  ) into v_hasil",
+"  from (",
+"    select",
+"      l.id, l.jenis, l.keterangan, l.jumlah, l.file_path,",
+"      l.sop_id, l.tanggal, l.dicatat, l.created_at,",
+"      (",
+"        select s ->> 'nama'",
+"        from public.umkm_data ud,",
+"             jsonb_array_elements(coalesce(ud.data -> 'sops', '[]'::jsonb)) as s",
+"        where ud.user_id = l.pemilik_id",
+"          and s ->> 'id' = l.sop_id",
+"        limit 1",
+"      )::text as sop_nama",
+"    from public.laporan_pegawai l",
+"    where l.pegawai_email = v_email",
+"    order by l.tanggal desc, l.created_at desc",
+"    limit 200",
+"  ) as x;",
+"",
+"  return v_hasil;",
+"end;",
+"$$;",
+"comment on function public.laporan_saya() is 'Laporan pegawai yang masuk (paling baru dulu, maks 200): foto/kwitansi, keterangan, jumlah kwitansi, jalur foto, SOP terkait, tanggal, dan apakah sudah dicatat pemilik. Hanya laporan pegawai itu sendiri.';",
+"",
+"revoke execute on function public.laporan_saya() from public;",
+"grant execute on function public.laporan_saya() to authenticated;",
+"",
+"-- Laporan tim untuk setiap pemilik usaha yang masuk (paling baru dulu,",
+"-- maks 200 baris):",
+"--   id, pegawai_nama, pegawai_email, foto_path, jenis, keterangan,",
+"--   jumlah, file_path, sop_id, sop_nama, tanggal, dicatat, dicatat_pada.",
+"-- id dipakai aplikasi utama untuk menandai kwitansi sudah dicatat.",
+"-- foto_path = jalur pas foto wajah pegawai (null bila belum diunggah).",
+"-- TANPA gate pemilik aplikasi (pelajaran dari perbaikan gate",
+"-- ringkasan tim): setiap pemilik hanya melihat laporan timnya sendiri",
+"-- (pemilik_id = auth.uid()). Pemanggil yang belum punya pegawai",
+"-- mendapat himpunan kosong, bukan error. Dipakai aplikasi utama",
+"-- (modul Orang & SOP) untuk tampilan \"Laporan pegawai\".",
+"create or replace function public.laporan_tim_untuk_pemilik()",
+"returns table(",
+"  id uuid,",
+"  pegawai_nama text,",
+"  pegawai_email text,",
+"  foto_path text,",
+"  jenis text,",
+"  keterangan text,",
+"  jumlah numeric,",
+"  file_path text,",
+"  sop_id text,",
+"  sop_nama text,",
+"  tanggal date,",
+"  dicatat boolean,",
+"  dicatat_pada timestamptz",
+")",
+"language plpgsql security definer set search_path = public as $$",
+"declare",
+"  v_pemilik_id uuid := auth.uid();",
+"begin",
+"  return query",
+"  select",
+"    l.id as id,",
+"    a.nama::text as pegawai_nama,",
+"    l.pegawai_email::text as pegawai_email,",
+"    a.foto_path::text as foto_path,",
+"    l.jenis::text as jenis,",
+"    l.keterangan::text as keterangan,",
+"    l.jumlah as jumlah,",
+"    l.file_path::text as file_path,",
+"    l.sop_id::text as sop_id,",
+"    (",
+"      select s ->> 'nama'",
+"      from public.umkm_data ud,",
+"           jsonb_array_elements(coalesce(ud.data -> 'sops', '[]'::jsonb)) as s",
+"      where ud.user_id = l.pemilik_id",
+"        and s ->> 'id' = l.sop_id",
+"      limit 1",
+"    )::text as sop_nama,",
+"    l.tanggal,",
+"    l.dicatat,",
+"    l.dicatat_pada",
+"  from public.laporan_pegawai l",
+"  left join public.akses_pegawai a on a.email = l.pegawai_email",
+"  where l.pemilik_id = v_pemilik_id",
+"  order by l.tanggal desc, l.created_at desc",
+"  limit 200;",
+"end;",
+"$$;",
+"comment on function public.laporan_tim_untuk_pemilik() is 'Laporan tim untuk setiap pemilik usaha: id laporan, pegawai (nama + email + pas foto), jenis laporan, keterangan, jumlah kwitansi, jalur foto, SOP terkait, tanggal, dan apakah sudah dicatat pemilik. Hanya laporan tim pemanggil sendiri (pemilik_id = auth.uid()); pemanggil tanpa pegawai mendapat himpunan kosong, bukan error. Maks 200 baris, paling baru dulu.';",
+"",
+"revoke execute on function public.laporan_tim_untuk_pemilik() from public;",
+"grant execute on function public.laporan_tim_untuk_pemilik() to authenticated;",
+"",
+"-- Menandai satu kwitansi sudah dicatat pemilik. Hanya pemilik usaha",
+"-- untuk laporan pegawai usahanya sendiri (pemilik_id = auth.uid()).",
+"-- Mengubah dicatat=true + dicatat_pada=now() HANYA bila dicatat masih",
+"-- false — bila laporan sudah dicatat, baris dikembalikan apa adanya",
+"-- (tanpa perubahan, tanpa galat), supaya pemanggil yang mengetuk dua",
+"-- kali tidak mencatat ganda. Laporan yang bukan milik tim pemanggil",
+"-- tidak ditemukan (bukan galat akses).",
+"create or replace function public.tandai_laporan_dicatat(",
+"  p_laporan_id uuid",
+")",
+"returns jsonb",
+"language plpgsql security definer set search_path = public as $$",
+"declare",
+"  v_pemilik_id uuid := auth.uid();",
+"  v_id uuid;",
+"  v_dicatat boolean;",
+"begin",
+"  update public.laporan_pegawai l",
+"  set dicatat = true, dicatat_pada = now()",
+"  where l.id = p_laporan_id",
+"    and l.pemilik_id = v_pemilik_id",
+"    and l.dicatat = false",
+"  returning l.id, l.dicatat into v_id, v_dicatat;",
+"",
+"  if v_id is null then",
+"    select l.id, l.dicatat into v_id, v_dicatat",
+"    from public.laporan_pegawai l",
+"    where l.id = p_laporan_id",
+"      and l.pemilik_id = v_pemilik_id;",
+"    if v_id is null then",
+"      raise exception 'Laporan tidak ditemukan.';",
+"    end if;",
+"  end if;",
+"",
+"  return jsonb_build_object('id', v_id, 'dicatat', v_dicatat);",
+"end;",
+"$$;",
+"comment on function public.tandai_laporan_dicatat(uuid) is 'Menandai satu laporan tim sudah dicatat pemilik (dicatat=true + waktu dicatat). Hanya pemilik untuk laporan timnya sendiri. Bila sudah dicatat, baris dikembalikan apa adanya tanpa galat — tidak pernah mencatat ganda.';",
+"",
+"revoke execute on function public.tandai_laporan_dicatat(uuid) from public;",
+"grant execute on function public.tandai_laporan_dicatat(uuid) to authenticated;",
+"",
+"-- Menyimpan jalur pas foto wajah pegawai yang masuk.",
+"--   p_foto_path: jalur di bucket bukti-pegawai, harus berawalan",
+"--     pasfoto/ (lihat bagian 8).",
+"-- Hanya pegawai aktif; yang diubah HANYA kolom foto_path pada baris",
+"-- pegawai itu sendiri (nama, peran, dan aktif TIDAK disentuh).",
+"-- CATATAN KEAMANAN: jalur ini sengaja TIDAK dibuka lewat kebijakan",
+"-- tulis langsung di tabel akses_pegawai — kebijakan tulis langsung",
+"-- akan membiarkan pegawai mengubah nama, peran, atau aktifnya",
+"-- sendiri. RPC security definer ini hanya menulis foto_path.",
+"-- Mengembalikan satu objek JSON: {foto_path}.",
+"create or replace function public.simpan_pas_foto(",
+"  p_foto_path text",
+")",
+"returns jsonb",
+"language plpgsql security definer set search_path = public as $$",
+"declare",
+"  v_email text := auth.jwt() ->> 'email';",
+"  v_jalur text := btrim(coalesce(p_foto_path, ''));",
+"begin",
+"  perform public.periksa_pegawai();",
+"",
+"  if v_jalur = '' then",
+"    raise exception 'Pas foto belum diunggah.';",
+"  end if;",
+"  if left(v_jalur, 8) <> 'pasfoto/' then",
+"    raise exception 'Jalur pas foto tidak dikenal.';",
+"  end if;",
+"",
+"  update public.akses_pegawai a",
+"  set foto_path = v_jalur",
+"  where a.email = v_email and a.aktif;",
+"",
+"  return jsonb_build_object('foto_path', v_jalur);",
+"end;",
+"$$;",
+"comment on function public.simpan_pas_foto(text) is 'Menyimpan jalur pas foto wajah pegawai yang masuk (harus berawalan pasfoto/). Hanya pegawai aktif; hanya kolom foto_path pada baris pegawai itu sendiri yang diubah.';",
+"",
+"revoke execute on function public.simpan_pas_foto(text) from public;",
+"grant execute on function public.simpan_pas_foto(text) to authenticated;",
+"",
+"-- ============================================================================",
+"-- 10. RPC VERIFIKASI SOP — siapa memeriksa pekerjaan siapa",
+"-- ============================================================================",
+"-- Pegawai mencentang semua langkah -> SOP menunggu dicek -> pemeriksa",
+"-- (yang ditunjuk di kolom \"pengecek\" SOP itu, atau pemilik usaha)",
+"-- menandainya sudah dicek. Verifikasi dicatat di baris sop_jalankan",
+"-- yang sama (kolom dicek_oleh + dicek_pada, bagian 2) — tidak ada",
+"-- tabel baru.",
+"--",
+"-- Aturan pemeriksa (mengikuti aturan \"SOP yang saya pimpin\" yang",
+"-- sudah ada di aplikasi pegawai — bandingkan nama dengan trim +",
+"-- huruf kecil):",
+"--   * Pemilik usaha boleh menandai sudah dicek untuk BARIS TIMNYA",
+"--     SENDIRI (pemilik_id = auth.uid()); dicatat dicek_oleh 'Pemilik'.",
+"--   * Pegawai hanya boleh menandai pekerjaan pegawai LAIN dari usaha",
+"--     yang sama, dan hanya bila namanya cocok dengan pengecek SOP itu.",
+"--     Ada SATU larangan tambahan: pemeriksa TIDAK BOLEH menandai",
+"--     pekerjaannya sendiri (pengecek memeriksa orang lain — bila ia",
+"--     sendiri yang menjalankan SOP itu, yang menandai adalah pemilik",
+"--     usaha). Larangan ini dijaga server, bukan hanya di layar.",
+"--   * SOP tanpa pengecek (kosong) diperiksa oleh pemilik usaha saja.",
+"-- Pekerjaan yang belum selesai (selesai = false) tidak bisa ditandai",
+"-- sudah dicek. Bila sudah dicek, panggilan kedua mengembalikan baris",
+"-- yang sama tanpa galat dan tanpa mengubah dicek_pada.",
+"create or replace function public.verifikasi_sop_jalankan(",
+"  p_pegawai_email text,",
+"  p_sop_id text,",
+"  p_tanggal date",
+")",
+"returns jsonb",
+"language plpgsql security definer set search_path = public as $$",
+"declare",
+"  v_email text := auth.jwt() ->> 'email';",
+"  v_pemilik_id uuid;",
+"  v_nama text;",
+"  v_sop_pengecek text;",
+"  v_selesai boolean;",
+"  v_dicek_oleh text;",
+"  v_dicek_pada timestamptz;",
+"begin",
+"  if p_pegawai_email is null or btrim(p_pegawai_email) = '' then",
+"    raise exception 'Pegawai tidak dikenal.';",
+"  end if;",
+"  if p_sop_id is null or p_sop_id = '' then",
+"    raise exception 'SOP tidak dikenal.';",
+"  end if;",
+"  if p_tanggal is null then",
+"    raise exception 'Tanggal tidak dikenal.';",
+"  end if;",
+"",
+"  -- Apakah pemanggil pegawai aktif (punya baris akses_pegawai)?",
+"  select a.pemilik_id, a.nama into v_pemilik_id, v_nama",
+"  from public.akses_pegawai a",
+"  where a.email = v_email and a.aktif",
+"  limit 1;",
+"",
+"  if v_pemilik_id is null then",
+"    -- Pemanggil bukan pegawai aktif: ia adalah pemilik usaha yang",
+"    -- memverifikasi timnya sendiri. Nama yang dicatat: 'Pemilik'.",
+"    v_pemilik_id := auth.uid();",
+"    v_nama := 'Pemilik';",
+"    select j.selesai, j.dicek_oleh, j.dicek_pada",
+"      into v_selesai, v_dicek_oleh, v_dicek_pada",
+"    from public.sop_jalankan j",
+"    where j.pegawai_email = p_pegawai_email",
+"      and j.sop_id = p_sop_id",
+"      and j.tanggal = p_tanggal",
+"      and j.pemilik_id = v_pemilik_id;",
+"    if not found then",
+"      raise exception 'Hanya pemilik usaha yang boleh menandai pekerjaan ini sudah dicek.';",
+"    end if;",
+"  else",
+"    -- Pemanggil pegawai aktif: baris yang dicek harus dari usaha",
+"    -- yang sama; pemanggil tidak boleh memeriksa pekerjaannya",
+"    -- sendiri; dan namanya harus cocok dengan pengecek SOP itu.",
+"    select j.selesai, j.dicek_oleh, j.dicek_pada",
+"      into v_selesai, v_dicek_oleh, v_dicek_pada",
+"    from public.sop_jalankan j",
+"    where j.pegawai_email = p_pegawai_email",
+"      and j.sop_id = p_sop_id",
+"      and j.tanggal = p_tanggal",
+"      and j.pemilik_id = v_pemilik_id;",
+"    if not found then",
+"      raise exception 'Hanya pemeriksa SOP ini yang boleh menandainya sudah dicek.';",
+"    end if;",
+"    if lower(btrim(p_pegawai_email)) = lower(btrim(v_email)) then",
+"      raise exception 'Pemeriksa tidak boleh menandai pekerjaannya sendiri.';",
+"    end if;",
+"    select nullif(s ->> 'pengecek', '') into v_sop_pengecek",
+"    from public.umkm_data ud,",
+"         jsonb_array_elements(coalesce(ud.data -> 'sops', '[]'::jsonb)) as s",
+"    where ud.user_id = v_pemilik_id",
+"      and s ->> 'id' = p_sop_id",
+"    limit 1;",
+"    if v_sop_pengecek is null then",
+"      raise exception 'SOP ini diperiksa oleh pemilik usaha.';",
+"    end if;",
+"    if lower(btrim(v_sop_pengecek)) <> lower(btrim(v_nama)) then",
+"      raise exception 'Hanya pemeriksa SOP ini yang boleh menandainya sudah dicek.';",
+"    end if;",
+"  end if;",
+"",
+"  if not coalesce(v_selesai, false) then",
+"    raise exception 'Pekerjaan belum selesai — tandai sudah dicek hanya bila seluruh langkah sudah dicentang.';",
+"  end if;",
+"",
+"  if v_dicek_oleh is not null then",
+"    -- Sudah dicek sebelumnya: kembalikan baris yang sama tanpa",
+"    -- galat dan tanpa mengubah dicek_pada.",
+"    return jsonb_build_object(",
+"      'pegawai_email', p_pegawai_email,",
+"      'sop_id', p_sop_id,",
+"      'tanggal', p_tanggal,",
+"      'dicek_oleh', v_dicek_oleh,",
+"      'dicek_pada', v_dicek_pada",
+"    );",
+"  end if;",
+"",
+"  update public.sop_jalankan j",
+"    set dicek_oleh = v_nama, dicek_pada = now()",
+"  where j.pegawai_email = p_pegawai_email",
+"    and j.sop_id = p_sop_id",
+"    and j.tanggal = p_tanggal",
+"    and j.dicek_oleh is null",
+"  returning j.dicek_oleh, j.dicek_pada into v_dicek_oleh, v_dicek_pada;",
+"",
+"  if v_dicek_oleh is null then",
+"    -- Perlumbaan dengan panggilan lain yang menandai lebih dulu:",
+"    -- baca ulang baris yang sudah terverifikasi itu.",
+"    select j.dicek_oleh, j.dicek_pada into v_dicek_oleh, v_dicek_pada",
+"    from public.sop_jalankan j",
+"    where j.pegawai_email = p_pegawai_email",
+"      and j.sop_id = p_sop_id",
+"      and j.tanggal = p_tanggal;",
+"  end if;",
+"",
+"  return jsonb_build_object(",
+"    'pegawai_email', p_pegawai_email,",
+"    'sop_id', p_sop_id,",
+"    'tanggal', p_tanggal,",
+"    'dicek_oleh', v_dicek_oleh,",
+"    'dicek_pada', v_dicek_pada",
+"  );",
+"end;",
+"$$;",
+"comment on function public.verifikasi_sop_jalankan(text, text, date) is 'Tandai pekerjaan SOP yang sudah selesai sebagai sudah dicek, dicatat siapa dan kapan. Pemilik usaha boleh untuk timnya sendiri (dicek_oleh Pemilik); pegawai hanya bila namanya cocok dengan pengecek SOP itu dan bukan pekerjaannya sendiri. Bila sudah dicek, panggilan kedua mengembalikan baris yang sama tanpa galat.';",
+"",
+"revoke execute on function public.verifikasi_sop_jalankan(text, text, date) from public;",
+"grant execute on function public.verifikasi_sop_jalankan(text, text, date) to authenticated;",
+"",
+"-- RPC perlu_dicek_untuk_pegawai() — daftar pekerjaan yang harus dicek",
+"-- pegawai yang masuk (sebagai pemeriksa yang ditunjuk).",
+"-- Mengembalikan array JSON, paling baru dulu, maks 200:",
+"--   [{pegawai_nama, pegawai_email, sop_id, sop_nama, tanggal,",
+"--     langkah_selesai}]",
+"-- Hanya baris  selesai = true, dicek_oleh masih null, milik usaha",
+"-- yang sama, SOP-nya menunjuk pemanggil sebagai pengecek (trim +",
+"-- huruf kecil), dan BUKAN pekerjaan pemanggil sendiri. Pegawai yang",
+"-- bukan pemeriksa SOP mana pun mendapat array kosong, bukan error.",
+"create or replace function public.perlu_dicek_untuk_pegawai()",
+"returns jsonb",
+"language plpgsql security definer set search_path = public as $$",
+"declare",
+"  v_email text := auth.jwt() ->> 'email';",
+"  v_pemilik_id uuid;",
+"  v_nama text;",
+"  v_daftar jsonb;",
+"begin",
+"  perform public.periksa_pegawai();",
+"",
+"  select a.pemilik_id, a.nama into v_pemilik_id, v_nama",
+"  from public.akses_pegawai a",
+"  where a.email = v_email and a.aktif",
+"  limit 1;",
+"",
+"  select coalesce(",
+"    jsonb_agg(",
+"      jsonb_build_object(",
+"        'pegawai_nama', r.pegawai_nama,",
+"        'pegawai_email', r.pegawai_email,",
+"        'sop_id', r.sop_id,",
+"        'sop_nama', r.sop_nama,",
+"        'tanggal', r.tanggal,",
+"        'langkah_selesai', r.langkah_selesai",
+"      ) order by r.tanggal desc, r.dicatat_pada desc",
+"    ),",
+"    '[]'::jsonb",
+"  ) into v_daftar",
+"  from (",
+"    select",
+"      a2.nama::text as pegawai_nama,",
+"      j.pegawai_email::text as pegawai_email,",
+"      j.sop_id::text as sop_id,",
+"      (",
+"        select s ->> 'nama'",
+"        from public.umkm_data ud,",
+"             jsonb_array_elements(coalesce(ud.data -> 'sops', '[]'::jsonb)) as s",
+"        where ud.user_id = j.pemilik_id",
+"          and s ->> 'id' = j.sop_id",
+"        limit 1",
+"      )::text as sop_nama,",
+"      j.tanggal,",
+"      j.langkah_selesai,",
+"      j.created_at as dicatat_pada",
+"    from public.sop_jalankan j",
+"    left join public.akses_pegawai a2 on a2.email = j.pegawai_email",
+"    where j.pemilik_id = v_pemilik_id",
+"      and j.pegawai_email <> v_email",
+"      and j.selesai = true",
+"      and j.dicek_oleh is null",
+"      and exists (",
+"        select 1",
+"        from public.umkm_data ud,",
+"             jsonb_array_elements(coalesce(ud.data -> 'sops', '[]'::jsonb)) as s",
+"        where ud.user_id = j.pemilik_id",
+"          and s ->> 'id' = j.sop_id",
+"          and lower(btrim(coalesce(s ->> 'pengecek', ''))) = lower(btrim(v_nama))",
+"      )",
+"    order by j.tanggal desc, j.created_at desc",
+"    limit 200",
+"  ) as r;",
+"",
+"  return coalesce(v_daftar, '[]'::jsonb);",
+"end;",
+"$$;",
+"comment on function public.perlu_dicek_untuk_pegawai() is 'Pekerjaan SOP yang selesai dan menunggu dicek oleh pegawai yang masuk (sebagai pemeriksa yang ditunjuk di SOP). Hanya usaha yang sama, bukan pekerjaan sendiri. Array JSON, paling baru dulu, maks 200.';",
+"",
+"revoke execute on function public.perlu_dicek_untuk_pegawai() from public;",
+"grant execute on function public.perlu_dicek_untuk_pegawai() to authenticated;",
+"",
+"-- ============================================================================",
+"-- 11. TABEL presensi — siapa masuk / pulang, kapan",
+"-- ============================================================================",
+"-- Satu baris = satu pegawai pada satu hari. Masuk dan pulang dicatat",
+"-- dengan stempel waktu server (now()); ketukan kedua pada hari yang",
+"-- sama TIDAK menimpa stempel pertama (yang pertama yang menang).",
+"-- TIDAK ADA lokasi/GPS di tabel ini dan di mana pun di aplikasi",
+"-- pegawai — aturan yang berlaku.",
+"create table if not exists public.presensi (",
+"  id uuid not null primary key default gen_random_uuid(),",
+"  pegawai_email text not null,",
+"  pemilik_id uuid not null,",
+"  tanggal date not null default current_date,",
+"  masuk_pada timestamptz,",
+"  pulang_pada timestamptz,",
+"  created_at timestamptz not null default now(),",
+"  updated_at timestamptz not null default now(),",
+"  constraint presensi_satu_baris_per_hari unique (pegawai_email, tanggal)",
+");",
+"comment on table public.presensi is 'Presensi pegawai: satu baris per pegawai per hari; masuk_pada dan pulang_pada adalah stempel waktu server. Tanpa lokasi (tidak ada GPS di aplikasi pegawai).';",
+"comment on column public.presensi.masuk_pada is 'Waktu pegawai menekan Masuk hari itu (stempel waktu server; ketukan Masuk berikutnya hari itu tidak menimpanya).';",
+"comment on column public.presensi.pulang_pada is 'Waktu pegawai menekan Pulang hari itu (stempel waktu server; ketukan Pulang berikutnya hari itu tidak menimpanya).';",
+"",
+"alter table public.presensi enable row level security;",
+"",
+"-- Membaca: pegawai hanya membaca barisnya sendiri; pemilik usaha",
+"-- membaca baris pegawai usahanya sendiri.",
+"drop policy if exists \"presensi baca sendiri\" on public.presensi;",
+"create policy \"presensi baca sendiri\" on public.presensi",
+"  for select using (auth.jwt() ->> 'email' = pegawai_email);",
+"",
+"drop policy if exists \"presensi baca pemilik\" on public.presensi;",
+"create policy \"presensi baca pemilik\" on public.presensi",
+"  for select using (auth.uid() = pemilik_id);",
+"",
+"-- Menulis: pegawai hanya menulis baris atas namanya sendiri.",
+"drop policy if exists \"presensi tulis sendiri\" on public.presensi;",
+"create policy \"presensi tulis sendiri\" on public.presensi",
+"  for insert to authenticated",
+"  with check (auth.jwt() ->> 'email' = pegawai_email);",
+"",
+"drop policy if exists \"presensi ubah sendiri\" on public.presensi;",
+"create policy \"presensi ubah sendiri\" on public.presensi",
+"  for update to authenticated",
+"  using (auth.jwt() ->> 'email' = pegawai_email)",
+"  with check (auth.jwt() ->> 'email' = pegawai_email);",
+"",
+"-- Menghapus: hanya pemilik usaha, untuk baris pegawai usahanya.",
+"drop policy if exists \"presensi hapus pemilik\" on public.presensi;",
+"create policy \"presensi hapus pemilik\" on public.presensi",
+"  for delete using (auth.uid() = pemilik_id);",
+"",
+"-- RPC catat_presensi(p_jenis) — pegawai menekan Masuk / Pulang.",
+"-- p_jenis harus 'masuk' atau 'pulang'. Upsert baris hari ini: Masuk",
+"-- pertama yang menang, Pulang pertama yang menang; ketukan ulang",
+"-- mengembalikan baris yang sama tanpa mengubah stempel. Pulang tanpa",
+"-- Masuk tetap dicatat (masuk_pada null) — pegawai bisa masuk tanpa",
+"-- sempat menekan Masuk. Hanya pegawai aktif; pegawai hanya mencatat",
+"-- atas namanya sendiri. Mengembalikan {tanggal, masuk_pada,",
+"-- pulang_pada}.",
+"create or replace function public.catat_presensi(p_jenis text)",
+"returns jsonb",
+"language plpgsql security definer set search_path = public as $$",
+"declare",
+"  v_email text := auth.jwt() ->> 'email';",
+"  v_pemilik_id uuid;",
+"  v_tanggal date := current_date;",
+"  v_masuk timestamptz;",
+"  v_pulang timestamptz;",
+"begin",
+"  perform public.periksa_pegawai();",
+"",
+"  select a.pemilik_id into v_pemilik_id",
+"  from public.akses_pegawai a",
+"  where a.email = v_email and a.aktif",
+"  limit 1;",
+"",
+"  if p_jenis is null or p_jenis not in ('masuk', 'pulang') then",
+"    raise exception 'Jenis presensi tidak dikenal.';",
+"  end if;",
+"",
+"  insert into public.presensi (pegawai_email, pemilik_id, tanggal,",
+"    masuk_pada, pulang_pada, updated_at)",
+"  values (v_email, v_pemilik_id, v_tanggal,",
+"    case when p_jenis = 'masuk' then now() else null end,",
+"    case when p_jenis = 'pulang' then now() else null end,",
+"    now())",
+"  on conflict (pegawai_email, tanggal)",
+"  do update set",
+"    masuk_pada = coalesce(presensi.masuk_pada, excluded.masuk_pada),",
+"    pulang_pada = coalesce(presensi.pulang_pada, excluded.pulang_pada),",
+"    updated_at = now();",
+"",
+"  select p.masuk_pada, p.pulang_pada into v_masuk, v_pulang",
+"  from public.presensi p",
+"  where p.pegawai_email = v_email and p.tanggal = v_tanggal;",
+"",
+"  return jsonb_build_object(",
+"    'tanggal', v_tanggal,",
+"    'masuk_pada', v_masuk,",
+"    'pulang_pada', v_pulang",
+"  );",
+"end;",
+"$$;",
+"comment on function public.catat_presensi(text) is 'Catat presensi Masuk/Pulang pegawai hari ini (stempel waktu server). Satu baris per pegawai per hari (upsert); ketukan pertama yang menang. Pulang tanpa Masuk tetap dicatat. Hanya pegawai aktif, atas namanya sendiri.';",
+"",
+"revoke execute on function public.catat_presensi(text) from public;",
+"grant execute on function public.catat_presensi(text) to authenticated;",
+"",
+"-- RPC presensi_saya() — presensi pegawai yang masuk hari ini +",
+"-- riwayat 7 hari terakhir (untuk layar Presensi di aplikasi pegawai).",
+"-- Mengembalikan {hari_ini: {tanggal, masuk_pada, pulang_pada} | null,",
+"-- riwayat: [{tanggal, masuk_pada, pulang_pada}] paling baru dulu,",
+"-- maks 7}. Hanya pegawai aktif, atas namanya sendiri.",
+"create or replace function public.presensi_saya()",
+"returns jsonb",
+"language plpgsql security definer set search_path = public as $$",
+"declare",
+"  v_email text := auth.jwt() ->> 'email';",
+"  v_hari_ini jsonb;",
+"  v_riwayat jsonb;",
+"begin",
+"  perform public.periksa_pegawai();",
+"",
+"  select jsonb_build_object(",
+"    'tanggal', p.tanggal,",
+"    'masuk_pada', p.masuk_pada,",
+"    'pulang_pada', p.pulang_pada",
+"  ) into v_hari_ini",
+"  from public.presensi p",
+"  where p.pegawai_email = v_email and p.tanggal = current_date;",
+"",
+"  select coalesce(",
+"    jsonb_agg(",
+"      jsonb_build_object(",
+"        'tanggal', p.tanggal,",
+"        'masuk_pada', p.masuk_pada,",
+"        'pulang_pada', p.pulang_pada",
+"      ) order by p.tanggal desc",
+"    ),",
+"    '[]'::jsonb",
+"  ) into v_riwayat",
+"  from (",
+"    select p.tanggal, p.masuk_pada, p.pulang_pada",
+"    from public.presensi p",
+"    where p.pegawai_email = v_email",
+"      and p.tanggal < current_date",
+"    order by p.tanggal desc",
+"    limit 7",
+"  ) as p;",
+"",
+"  return jsonb_build_object(",
+"    'hari_ini', v_hari_ini,",
+"    'riwayat', coalesce(v_riwayat, '[]'::jsonb)",
+"  );",
+"end;",
+"$$;",
+"comment on function public.presensi_saya() is 'Presensi pegawai yang masuk: hari ini + riwayat 7 hari terakhir. Hanya pegawai aktif, atas namanya sendiri.';",
+"",
+"revoke execute on function public.presensi_saya() from public;",
+"grant execute on function public.presensi_saya() to authenticated;",
+"",
+"-- RPC presensi_hari_ini_untuk_pemilik() — siapa yang hadir hari ini",
+"-- untuk pemilik usaha yang memanggil (dipakai modul Orang & SOP di",
+"-- aplikasi utama). Satu baris per pegawai yang punya catatan",
+"-- presensi hari ini (pegawai yang belum menekan Masuk belum punya",
+"-- baris — aplikasi utama menampilkannya dari daftar tim sebagai",
+"-- \"belum masuk\"). Urut masuk_pada paling awal dulu; yang belum",
+"-- menekan Masuk (masuk_pada null, hanya Pulang) di akhir. Maks 200.",
+"-- TANPA gate pemilik aplikasi: setiap pemilik usaha boleh memanggil",
+"-- dan hanya melihat timnya sendiri (pemilik_id = auth.uid());",
+"-- pemanggil tanpa tim mendapat himpunan kosong, bukan error.",
+"create or replace function public.presensi_hari_ini_untuk_pemilik()",
+"returns table(",
+"  pegawai_nama text,",
+"  pegawai_email text,",
+"  foto_path text,",
+"  tanggal date,",
+"  masuk_pada timestamptz,",
+"  pulang_pada timestamptz",
+")",
+"language plpgsql security definer set search_path = public as $$",
+"declare",
+"  v_pemilik_id uuid := auth.uid();",
+"begin",
+"  return query",
+"  select",
+"    a.nama::text as pegawai_nama,",
+"    p.pegawai_email::text as pegawai_email,",
+"    a.foto_path::text as foto_path,",
+"    p.tanggal,",
+"    p.masuk_pada,",
+"    p.pulang_pada",
+"  from public.presensi p",
+"  left join public.akses_pegawai a on a.email = p.pegawai_email",
+"  where p.pemilik_id = v_pemilik_id",
+"    and p.tanggal = current_date",
+"  order by p.masuk_pada asc nulls last, p.created_at asc",
+"  limit 200;",
+"end;",
+"$$;",
+"comment on function public.presensi_hari_ini_untuk_pemilik() is 'Presensi tim hari ini untuk pemilik usaha yang memanggil: siapa hadir beserta jam masuk/pulang. Hanya tim pemanggil sendiri (pemilik_id = auth.uid()); pemanggil tanpa tim mendapat himpunan kosong, bukan error. Maks 200 baris.';",
+"",
+"revoke execute on function public.presensi_hari_ini_untuk_pemilik() from public;",
+"grant execute on function public.presensi_hari_ini_untuk_pemilik() to authenticated;",
+"",
+"-- ============================================================================",
+"-- 12. TABEL pemakaian_ai + RPC KUOTA AI — anggaran bersama pemilik",
+"-- ============================================================================",
+"-- Pemakaian AI (isikan pegawai yang dibantu AI + pemakaian pemilik",
+"-- sendiri) dihitung terhadap KUOTA PEMILIK per bulan kalender",
+"-- (YYYY-MM). Batas lunak per pegawai: 20 isian dibantu AI per",
+"-- pegawai per bulan; batas pemilik menurut tingkat paket:",
+"--   Gratis 20, Mikro 300, Kecil 600, Menengah 1.000 per bulan.",
+"-- Satu baris per (pemilik_id, pegawai_email, bulan). pegawai_email",
+"-- null = pemakaian pemilik sendiri lewat aplikasi utama (dicadangkan",
+"-- untuk nanti — lihat catatan di bawah).",
+"--",
+"-- TINGKAT PAKET — CELAH YANG DIDOKUMENTASIKAN (jangan diklaim",
+"-- lebih dari ini): tingkat paket pemilik hari ini hanya tersimpan di",
+"-- localStorage aplikasi utama (kunci umkm-introspeksi-tier-dipilih),",
+"-- yang tidak bisa dibaca fungsi server. Aplikasi utama sejak build",
+"-- ini juga menyimpan tingkat paketnya di cloud",
+"-- (umkm_data.data -> 'paket_tier') setiap kali menyimpan — RPC di",
+"-- bawah membacanya DULUAN. Urutan penentuan tingkat paket:",
+"--   (1) paket_tier di cloud (bila valid),",
+"--   (2) p_tier yang dikirim klien (bila valid),",
+"--   (3) 'gratis' (20/bulan) bila tidak dapat dipastikan.",
+"-- Artinya: penegakan batas PER PEGAWAI (20/bulan) dan pencatatan",
+"-- pemakaian adalah penegakan server yang sesungguhnya; tetapi",
+"-- langit-langit tingkat paket hanya sekuat sumber tingkatnya — klien",
+"-- yang mengirim tingkat lebih tinggi bisa menaikkan langit-langit",
+"-- bila cloud belum menyimpan tingkat. Pemilik yang paketnya sudah",
+"-- dibayar tetap memakai tingkat berbayarnya begitu aplikasi utama",
+"-- menyimpan sekali (paket_tier tersinkron ke cloud). Verifikasi",
+"-- pembayaran paket sendiri tetap di alur persetujuan langganan,",
+"-- bukan di RPC ini.",
+"--",
+"-- Pemakaian pemilik sendiri lewat aplikasi utama BELUM dihitung di",
+"-- sini: proxy /api/ai-chat aplikasi utama hari ini tidak menerima",
+"-- token sesi, jadi ia tidak bisa mengenali pemilik untuk memanggil",
+"-- pakai_ai_pemilik. RPC pakai_ai_pemilik sudah ditambahkan sekarang",
+"-- supaya proxy itu bisa memanggilnya nanti begitu ia mengirim token",
+"-- sesi. Sampai saat itu, yang dihitung di tabel ini baru pemakaian",
+"-- pegawai; pemakaian pemilik sendiri masih dihitung di localStorage",
+"-- aplikasi utama seperti sebelumnya.",
+"create table if not exists public.pemakaian_ai (",
+"  id uuid not null primary key default gen_random_uuid(),",
+"  pemilik_id uuid not null,",
+"  pegawai_email text,",
+"  bulan text not null,",
+"  jumlah int not null default 0,",
+"  updated_at timestamptz not null default now(),",
+"  constraint pemakaian_ai_bulan_format check (bulan ~ '^[0-9]{4}-[0-9]{2}$'),",
+"  constraint pemakaian_ai_jumlah_tidak_negatif check (jumlah >= 0)",
+");",
+"comment on table public.pemakaian_ai is 'Pemakaian AI per pemilik per bulan kalender: satu baris per (pemilik_id, pegawai_email, bulan); pegawai_email null = pemakaian pemilik sendiri. Batas per pegawai 20/bulan; batas pemilik menurut tingkat paket (Gratis 20, Mikro 300, Kecil 600, Menengah 1.000).';",
+"create unique index if not exists pemakaian_ai_unik",
+"  on public.pemakaian_ai (pemilik_id, bulan, coalesce(pegawai_email, ''));",
+"",
+"-- RLS aktif TANPA policy: tabel ini hanya dibaca/ditulis lewat RPC",
+"-- security definer di bawah (pelacakan server). Pembacaan langsung",
+"-- lewat REST ditolak — pemilik melihat pemakaian timnya lewat RPC",
+"-- pemakaian_ai_tim_untuk_pemilik, bukan lewat tabel ini.",
+"alter table public.pemakaian_ai enable row level security;",
+"",
+"-- RPC pakai_ai_pegawai(p_tier) — cek + catat satu pemakaian AI",
+"-- pegawai. Dipanggil proxy /api/ai-chat aplikasi pegawai SEBELUM",
+"-- memanggil DeepSeek. Mengembalikan JSON:",
+"--   {boleh, alasan, dipakai_pegawai, batas_pegawai: 20,",
+"--    dipakai_pemilik, batas_pemilik, tier}",
+"--   alasan = 'pegawai' bila batas lunak 20/pegawai/bulan tercapai,",
+"--   'pemilik' bila kuota pemilik bulan ini habis, null bila boleh.",
+"-- Bila tidak boleh, pemakaian TIDAK ditambah. Bila boleh, jumlah",
+"-- pegawai + total pemilik bulan ini ditambah 1 (atomik dalam satu",
+"-- pemanggilan RPC; baris pegawai dikunci supaya dua panggilan bersamaan",
+"-- tidak melewati batas). Hanya pegawai aktif.",
+"create or replace function public.pakai_ai_pegawai(p_tier text)",
+"returns jsonb",
+"language plpgsql security definer set search_path = public as $$",
+"declare",
+"  v_email text := auth.jwt() ->> 'email';",
+"  v_pemilik_id uuid;",
+"  v_bulan text := to_char(current_date, 'YYYY-MM');",
+"  v_tier text;",
+"  v_batas_pemilik int;",
+"  v_batas_pegawai int := 20;",
+"  v_dipakai_pegawai int;",
+"  v_dipakai_pemilik int;",
+"begin",
+"  perform public.periksa_pegawai();",
+"",
+"  select a.pemilik_id into v_pemilik_id",
+"  from public.akses_pegawai a",
+"  where a.email = v_email and a.aktif",
+"  limit 1;",
+"",
+"  -- Tingkat paket: (1) cloud, (2) klien, (3) 'gratis'.",
+"  select nullif(ud.data ->> 'paket_tier', '') into v_tier",
+"  from public.umkm_data ud",
+"  where ud.user_id = v_pemilik_id;",
+"  if v_tier is null or v_tier not in ('gratis', 'mikro', 'kecil', 'menengah') then",
+"    v_tier := nullif(btrim(coalesce(p_tier, '')), '');",
+"  end if;",
+"  if v_tier is null or v_tier not in ('gratis', 'mikro', 'kecil', 'menengah') then",
+"    v_tier := 'gratis';",
+"  end if;",
+"  v_batas_pemilik := case v_tier",
+"    when 'mikro' then 300",
+"    when 'kecil' then 600",
+"    when 'menengah' then 1000",
+"    else 20",
+"  end;",
+"",
+"  -- Total pemakaian pemilik bulan ini (pemilik + semua pegawai).",
+"  select coalesce(sum(jumlah), 0) into v_dipakai_pemilik",
+"  from public.pemakaian_ai",
+"  where pemilik_id = v_pemilik_id and bulan = v_bulan;",
+"",
+"  -- Baris pegawai bulan ini (buat bila belum ada), lalu kunci.",
+"  insert into public.pemakaian_ai (pemilik_id, pegawai_email, bulan, jumlah)",
+"  values (v_pemilik_id, v_email, v_bulan, 0)",
+"  on conflict (pemilik_id, bulan, (coalesce(pegawai_email, ''))) do nothing;",
+"",
+"  select jumlah into v_dipakai_pegawai",
+"  from public.pemakaian_ai",
+"  where pemilik_id = v_pemilik_id and bulan = v_bulan",
+"    and pegawai_email = v_email",
+"  for update;",
+"",
+"  if v_dipakai_pegawai >= v_batas_pegawai then",
+"    return jsonb_build_object(",
+"      'boleh', false,",
+"      'alasan', 'pegawai',",
+"      'dipakai_pegawai', v_dipakai_pegawai,",
+"      'batas_pegawai', v_batas_pegawai,",
+"      'dipakai_pemilik', v_dipakai_pemilik,",
+"      'batas_pemilik', v_batas_pemilik,",
+"      'tier', v_tier",
+"    );",
+"  end if;",
+"",
+"  if v_dipakai_pemilik >= v_batas_pemilik then",
+"    return jsonb_build_object(",
+"      'boleh', false,",
+"      'alasan', 'pemilik',",
+"      'dipakai_pegawai', v_dipakai_pegawai,",
+"      'batas_pegawai', v_batas_pegawai,",
+"      'dipakai_pemilik', v_dipakai_pemilik,",
+"      'batas_pemilik', v_batas_pemilik,",
+"      'tier', v_tier",
+"    );",
+"  end if;",
+"",
+"  update public.pemakaian_ai",
+"    set jumlah = jumlah + 1, updated_at = now()",
+"  where pemilik_id = v_pemilik_id",
+"    and bulan = v_bulan",
+"    and pegawai_email = v_email;",
+"",
+"  return jsonb_build_object(",
+"    'boleh', true,",
+"    'alasan', null,",
+"    'dipakai_pegawai', v_dipakai_pegawai + 1,",
+"    'batas_pegawai', v_batas_pegawai,",
+"    'dipakai_pemilik', v_dipakai_pemilik + 1,",
+"    'batas_pemilik', v_batas_pemilik,",
+"    'tier', v_tier",
+"  );",
+"end;",
+"$$;",
+"comment on function public.pakai_ai_pegawai(text) is 'Cek + catat satu pemakaian AI pegawai terhadap kuota pemilik bulan ini (batas lunak 20/pegawai/bulan; batas pemilik menurut tingkat paket: Gratis 20, Mikro 300, Kecil 600, Menengah 1.000). Tingkat paket dari cloud dulu, lalu klien, lalu gratis. Mengembalikan {boleh, alasan, dipakai_pegawai, batas_pegawai, dipakai_pemilik, batas_pemilik, tier}.';",
+"",
+"revoke execute on function public.pakai_ai_pegawai(text) from public;",
+"grant execute on function public.pakai_ai_pegawai(text) to authenticated;",
+"",
+"-- RPC pakai_ai_pemilik(p_tier) — cek + catat satu pemakaian AI",
+"-- pemilik sendiri (dipakai proxy /api/ai-chat aplikasi utama NANTI,",
+"-- begitu proxy itu mengirim token sesi; hari ini BELUM dipanggil",
+"-- siapa pun). Mengembalikan {boleh, alasan, dipakai_pemilik,",
+"-- batas_pemilik, tier}; alasan = 'pemilik' bila kuota bulan ini",
+"-- habis, null bila boleh. Pemakaian pemilik TIDAK dibatasi 20 —",
+"-- pemilik memakai kuota paketnya sendiri.",
+"create or replace function public.pakai_ai_pemilik(p_tier text)",
+"returns jsonb",
+"language plpgsql security definer set search_path = public as $$",
+"declare",
+"  v_pemilik_id uuid := auth.uid();",
+"  v_bulan text := to_char(current_date, 'YYYY-MM');",
+"  v_tier text;",
+"  v_batas_pemilik int;",
+"  v_dipakai_pemilik int;",
+"begin",
+"  if v_pemilik_id is null then",
+"    raise exception 'Masuk dulu untuk memakai AI.';",
+"  end if;",
+"",
+"  select nullif(ud.data ->> 'paket_tier', '') into v_tier",
+"  from public.umkm_data ud",
+"  where ud.user_id = v_pemilik_id;",
+"  if v_tier is null or v_tier not in ('gratis', 'mikro', 'kecil', 'menengah') then",
+"    v_tier := nullif(btrim(coalesce(p_tier, '')), '');",
+"  end if;",
+"  if v_tier is null or v_tier not in ('gratis', 'mikro', 'kecil', 'menengah') then",
+"    v_tier := 'gratis';",
+"  end if;",
+"  v_batas_pemilik := case v_tier",
+"    when 'mikro' then 300",
+"    when 'kecil' then 600",
+"    when 'menengah' then 1000",
+"    else 20",
+"  end;",
+"",
+"  select coalesce(sum(jumlah), 0) into v_dipakai_pemilik",
+"  from public.pemakaian_ai",
+"  where pemilik_id = v_pemilik_id and bulan = v_bulan;",
+"",
+"  if v_dipakai_pemilik >= v_batas_pemilik then",
+"    return jsonb_build_object(",
+"      'boleh', false,",
+"      'alasan', 'pemilik',",
+"      'dipakai_pemilik', v_dipakai_pemilik,",
+"      'batas_pemilik', v_batas_pemilik,",
+"      'tier', v_tier",
+"    );",
+"  end if;",
+"",
+"  insert into public.pemakaian_ai (pemilik_id, pegawai_email, bulan, jumlah)",
+"  values (v_pemilik_id, null, v_bulan, 1)",
+"  on conflict (pemilik_id, bulan, (coalesce(pegawai_email, '')))",
+"  do update set jumlah = pemakaian_ai.jumlah + 1, updated_at = now();",
+"",
+"  return jsonb_build_object(",
+"    'boleh', true,",
+"    'alasan', null,",
+"    'dipakai_pemilik', v_dipakai_pemilik + 1,",
+"    'batas_pemilik', v_batas_pemilik,",
+"    'tier', v_tier",
+"  );",
+"end;",
+"$$;",
+"comment on function public.pakai_ai_pemilik(text) is 'Cek + catat satu pemakaian AI pemilik sendiri terhadap kuota paket bulan ini (Gratis 20, Mikro 300, Kecil 600, Menengah 1.000). Dicadangkan untuk proxy /api/ai-chat aplikasi utama begitu ia mengirim token sesi; hari ini belum dipanggil.';",
+"",
+"revoke execute on function public.pakai_ai_pemilik(text) from public;",
+"grant execute on function public.pakai_ai_pemilik(text) to authenticated;",
+"",
+"-- RPC pemakaian_ai_tim_untuk_pemilik() — pemakaian AI tim bulan ini",
+"-- untuk pemilik usaha yang memanggil (dipakai kartu \"Pemakaian AI",
+"-- tim\" di modul Orang & SOP aplikasi utama). Satu baris per pegawai",
+"-- yang memakai AI bulan ini + satu baris 'Pemilik (aplikasi utama)'",
+"-- bila pemilik sendiri sudah memakai (lewat pakai_ai_pemilik):",
+"--   (pegawai_nama, pegawai_email, dipakai, batas)",
+"--   batas = 20 untuk pegawai; untuk pemilik = batas tingkat paket",
+"--     bulan ini (diambil dari cloud, lalu 'gratis').",
+"-- Urut dipakai paling banyak dulu. TANPA gate pemilik aplikasi:",
+"-- hanya tim pemanggil sendiri (pemilik_id = auth.uid()); pemanggil",
+"-- tanpa pemakaian mendapat himpunan kosong, bukan error.",
+"create or replace function public.pemakaian_ai_tim_untuk_pemilik()",
+"returns table(",
+"  pegawai_nama text,",
+"  pegawai_email text,",
+"  dipakai int,",
+"  batas int",
+")",
+"language plpgsql security definer set search_path = public as $$",
+"declare",
+"  v_pemilik_id uuid := auth.uid();",
+"  v_tier text;",
+"  v_batas_pemilik int;",
+"begin",
+"  select nullif(ud.data ->> 'paket_tier', '') into v_tier",
+"  from public.umkm_data ud",
+"  where ud.user_id = v_pemilik_id;",
+"  if v_tier is null or v_tier not in ('gratis', 'mikro', 'kecil', 'menengah') then",
+"    v_tier := 'gratis';",
+"  end if;",
+"  v_batas_pemilik := case v_tier",
+"    when 'mikro' then 300",
+"    when 'kecil' then 600",
+"    when 'menengah' then 1000",
+"    else 20",
+"  end;",
+"",
+"  return query",
+"  select",
+"    case when p.pegawai_email is null",
+"      then 'Pemilik (aplikasi utama)'::text",
+"      else coalesce(a.nama, p.pegawai_email)::text end,",
+"    p.pegawai_email::text,",
+"    p.jumlah,",
+"    case when p.pegawai_email is null then v_batas_pemilik else 20 end",
+"  from public.pemakaian_ai p",
+"  left join public.akses_pegawai a on a.email = p.pegawai_email",
+"  where p.pemilik_id = v_pemilik_id",
+"    and p.bulan = to_char(current_date, 'YYYY-MM')",
+"    and p.jumlah > 0",
+"  order by p.jumlah desc;",
+"end;",
+"$$;",
+"comment on function public.pemakaian_ai_tim_untuk_pemilik() is 'Pemakaian AI tim bulan ini untuk pemilik usaha yang memanggil: per pegawai (batas 20) + pemilik sendiri (batas tingkat paket). Hanya tim pemanggil sendiri; tanpa pemakaian mendapat himpunan kosong, bukan error.';",
+"",
+"revoke execute on function public.pemakaian_ai_tim_untuk_pemilik() from public;",
+"grant execute on function public.pemakaian_ai_tim_untuk_pemilik() to authenticated;",
 "",
 "-- ============================================================================",
 "-- PENUTUP — DAFTAR VERIFIKASI SETELAH KLIK RUN",
 "-- ============================================================================",
 "-- Jalankan pemeriksaan berikut di SQL Editor yang sama (satu per satu):",
 "--",
-"-- 1. Kedua tabel masih kosong (pemilik menambahkan pegawai lewat",
+"-- 1. Kelima tabel masih kosong (pemilik menambahkan pegawai lewat",
 "--    aplikasi utama, setelah file ini jalan):",
 "--      select * from public.akses_pegawai;",
 "--      select * from public.sop_jalankan;",
-"--    Keduanya harus mengembalikan 0 baris.",
+"--      select * from public.laporan_pegawai;",
+"--      select * from public.presensi;",
+"--      select * from public.pemakaian_ai;",
+"--    Kelimanya harus mengembalikan 0 baris.",
 "--",
-"-- 2. RLS aktif di kedua tabel:",
+"-- 2. RLS aktif di kelima tabel:",
 "--      select tablename, rowsecurity from pg_tables",
 "--      where schemaname = 'public'",
-"--        and tablename in ('akses_pegawai', 'sop_jalankan');",
-"--    Kolom rowsecurity harus true di kedua baris.",
+"--        and tablename in ('akses_pegawai', 'sop_jalankan',",
+"--          'laporan_pegawai', 'presensi', 'pemakaian_ai');",
+"--    Kolom rowsecurity harus true di kelima baris.",
 "--",
 "-- 3. Pemanggil yang bukan pegawai mendapat error (bukan data):",
 "--      (masuk dengan akun lain lalu) select public.sops_untuk_pegawai();",
@@ -675,6 +2051,51 @@ var SQL_TEXT =
 "--    lain tanpa tim sendiri (misal pegawai) — mendapat 0 baris,",
 "--    bukan error dan bukan log orang lain.",
 "--",
+"-- 5. Bucket bukti-pegawai ada dan privat:",
+"--      select id, public from storage.buckets where id = 'bukti-pegawai';",
+"--    Harus 1 baris dengan public = false.",
+"--",
+"-- 6. Kolom foto_path ada di akses_pegawai (null untuk pegawai lama):",
+"--      select email, foto_path from public.akses_pegawai;",
+"--    Kolom foto_path harus ada; baris lama bernilai null.",
+"--",
+"-- 7. Batas foto harian: kirim 5 laporan foto hari ini sebagai pegawai,",
+"--    kiriman ke-6 harus gagal dengan pesan \"Batas foto hari ini sudah",
+"--    tercapai (5 foto).\" (pas foto tidak dihitung ke batas ini).",
+"--",
+"-- 8. Laporan tim pemilik hanya mengembalikan laporan tim pemanggil:",
+"--      select * from public.laporan_tim_untuk_pemilik();",
+"--    Harus HANYA laporan tim pemanggil (pemilik_id = auth.uid());",
+"--    pemanggil tanpa tim mendapat 0 baris, bukan error.",
+"--",
+"-- 9. Tandai sudah dicatat tidak pernah mencatat ganda: panggil",
+"--    tandai_laporan_dicatat dua kali untuk kwitansi yang sama —",
+"--    panggilan kedua mengembalikan baris yang sama tanpa galat dan",
+"--    tanpa mengubah dicatat_pada.",
+"--",
+"-- 10. Verifikasi SOP: selesai-kan satu SOP sebagai pegawai, lalu",
+"--     panggil verifikasi_sop_jalankan sebagai pemilik usaha —",
+"--     dicek_oleh harus 'Pemilik', dicek_pada terisi. Panggil lagi:",
+"--     baris yang sama, dicek_pada tidak berubah. Pekerjaan yang",
+"--     belum selesai tidak bisa ditandai sudah dicek (harus galat).",
+"--     Sebagai pegawai yang BUKAN pengecek SOP itu, pemanggilan",
+"--     harus gagal.",
+"--",
+"-- 11. Presensi: sebagai pegawai, panggil catat_presensi('masuk')",
+"--     dua kali — masuk_pada kedua panggilan HARUS sama (ketukan",
+"--     pertama yang menang). Lalu catat_presensi('pulang') — pulang",
+"--     terisi, masuk tetap. select * from",
+"--     public.presensi_hari_ini_untuk_pemilik(); sebagai pemilik —",
+"--     hanya baris tim pemanggil hari ini; pemanggil tanpa tim",
+"--     mendapat 0 baris, bukan error.",
+"--",
+"-- 12. Kuota AI: sebagai pegawai, panggil pakai_ai_pegawai(null) —",
+"--     {boleh: true, ...} dan jumlah bertambah 1. Panggil sampai",
+"--     20 kali bulan ini — panggilan ke-21 harus {boleh: false,",
+"--     alasan: 'pegawai'}. select * from",
+"--     public.pemakaian_ai_tim_untuk_pemilik(); sebagai pemilik —",
+"--     menampilkan pemakaian tim bulan ini.",
+"--",
 "-- CATATAN:",
 "-- - Menambah pegawai (oleh pemilik, lewat daftar tim di aplikasi",
 "--   utama — atau lewat SQL bila perlu):",
@@ -682,12 +2103,20 @@ var SQL_TEXT =
 "--      values ('pegawai@contoh.id', auth.uid(), 'Nama Pegawai',",
 "--              array['kas','stok'], true);",
 "--   Pegawai lalu mendaftar sendiri di Aplikasi Pegawai dengan email",
-"--   yang sama + kata sandi buatannya sendiri.",
-"-- - Aplikasi pegawai HANYA memanggil ketiga RPC di atas + membaca",
-"--   tabel akses_pegawai langsung untuk memeriksa izin masuk.",
-"--   Aplikasi TIDAK membaca tabel pengguna atau data usaha langsung —",
-"--   semua lewat RPC yang memeriksa izin dan membatasi ke SOP pemilik",
-"--   + catatan pegawai itu sendiri.",
+"--   yang sama + kata sandi buatannya sendiri, lalu mengunggah pas",
+"--   foto wajahnya (wajib sebelum bisa memakai aplikasi).",
+"-- - Aplikasi pegawai memanggil RPC di atas + membaca tabel",
+"--   akses_pegawai langsung untuk memeriksa izin masuk (barisnya",
+"--   sendiri saja). Aplikasi TIDAK membaca tabel pengguna atau data",
+"--   usaha langsung — semua lewat RPC yang memeriksa izin dan",
+"--   membatasi ke SOP pemilik + catatan/laporan/presensi pegawai itu",
+"--   sendiri. Jalur pas foto HANYA ditulis lewat RPC simpan_pas_foto",
+"--   (bukan lewat tulis langsung ke tabel) supaya pegawai tidak bisa",
+"--   mengubah nama, peran, atau aktifnya sendiri.",
+"-- - Tingkat paket pemilik (paket_tier) dibaca RPC pemakaian AI dari",
+"--   umkm_data.data; aplikasi utama menyimpannya setiap kali",
+"--   menyimpan data. Bila belum tersimpan, RPC memakai tingkat yang",
+"--   dikirim klien, lalu 'gratis'.",
 "-- - Sampai file ini dijalankan, aplikasi menampilkan \"Fitur ini belum",
 "--   aktif — pengaturan cloud belum dijalankan\" beserta salinan SQL ini.",
 "-- ============================================================================"
@@ -715,7 +2144,9 @@ function tanggalHariIni(){
 
 /* ===== State & client ===== */
 var S = { user:null, email:null, nama:null, peran:[], namaUsaha:null,
-  layar:"sop", sops:[], jalankan:{}, emailKonfirmasi:null };
+  layar:"sop", sops:[], jalankan:{}, emailKonfirmasi:null,
+  pemilikId:null, fotoPath:null, laporan:[],
+  perluDicek:[], presensi:null, presensiRiwayat:[] };
 var __client = null;
 function getClient(){
   if(__client) return __client;
@@ -735,7 +2166,7 @@ function tutupPopup(){ el("popupOverlay").classList.remove("show"); }
 function pesanRamah(err){
   var m = String((err && err.message) || err || "");
   if(/hanya pegawai yang terdaftar/i.test(m)) return "Aplikasi ini hanya untuk pegawai yang terdaftar.\nHubungi pemilik usaha bila Anda merasa seharusnya bisa masuk.";
-  if(/hanya pemilik aplikasi/i.test(m)) return "Bagian ini hanya untuk pemilik aplikasi.";
+  if(/batas foto hari ini/i.test(m)) return "Batas foto hari ini sudah tercapai (5 foto).\nFoto laporan bisa dikirim lagi besok. Kwitansi tanpa foto tetap bisa dikirim.";
   if(/invalid login credentials|invalid email|invalid password/i.test(m)) return "Email atau kata sandi tidak cocok.\nPeriksa lagi ketikan Anda, lalu coba masuk kembali.";
   if(/email not confirmed|not confirmed/i.test(m)) return "Email Anda belum dikonfirmasi.\nBuka email Anda dan ketuk tautan konfirmasi yang kami kirim, lalu masuk kembali.";
   if(/too many requests|rate limit|email rate limit/i.test(m)) return "Terlalu banyak percobaan barusan.\nTunggu sebentar, lalu coba lagi.";
@@ -811,6 +2242,15 @@ async function sesudahMasuk(u){
   }
   S.user = u; S.email = email;
   S.nama = akses.nama || ""; S.peran = akses.peran || [];
+  S.pemilikId = akses.pemilikId || null;
+  S.fotoPath = akses.fotoPath || null;
+  /* Gerbang pas foto: pegawai tanpa pas foto belum bisa memakai
+     aplikasi — tampilkan layar "Lengkapi pas foto" sampai foto
+     wajahnya diunggah (ramah, bukan galat). */
+  if(!S.fotoPath){
+    tampilkanGerPasFoto();
+    return {ok:true, perluPasFoto:true};
+  }
   tampilDashboard();
   await muatLayarAktif();
   return {ok:true};
@@ -819,7 +2259,7 @@ async function periksaAkses(email){
   var c = getClient();
   if(!c) return {ok:false, alasan:"setup"};
   var r;
-  try{ r = await c.from("akses_pegawai").select("email,nama,peran,aktif").eq("email", email); }
+  try{ r = await c.from("akses_pegawai").select("email,nama,peran,aktif,foto_path,pemilik_id").eq("email", email); }
   catch(e){ return {ok:false, alasan:"setup", error:e}; }
   if(r.error){
     return {ok:false, alasan:"setup", error:r.error};
@@ -827,7 +2267,8 @@ async function periksaAkses(email){
   var rows = Array.isArray(r.data) ? r.data.filter(function(x){ return x && x.aktif === true; }) : [];
   if(!rows.length) return {ok:false, alasan:"tidak-terdaftar"};
   var row = rows[0];
-  return {ok:true, nama: row.nama || "", peran: Array.isArray(row.peran) ? row.peran : []};
+  return {ok:true, nama: row.nama || "", peran: Array.isArray(row.peran) ? row.peran : [],
+    fotoPath: row.foto_path || null, pemilikId: row.pemilik_id || null};
 }
 async function daftar(email, sandi){
   email = String(email||"").trim(); sandi = String(sandi||"");
@@ -840,7 +2281,21 @@ async function daftar(email, sandi){
   try{ r = await c.auth.signUp({email:email, password:sandi, options:{emailRedirectTo: PEGAWAI_URL}}); }
   catch(e){ tampilPopup("Tidak bisa mendaftar", pesanRamah(e)); return {ok:false}; }
   if(r.error){ tampilPopup("Tidak bisa mendaftar", pesanRamah(r.error)); return {ok:false, error:r.error}; }
+  /* Pas foto di alur daftar: bila pemilik sudah mendaftarkan email
+     ini (baris allowlist ada) dan foto sudah dipilih, unggah sekarang.
+     Bila belum (pemilik belum mendaftarkan, atau sesi belum terbentuk
+     karena email belum dikonfirmasi), pas foto diminta saat masuk
+     pertama kali lewat gerbang — pendaftaran tetap jalan. */
+  var berkasDaftar = el("fotoDaftar") && el("fotoDaftar").files && el("fotoDaftar").files[0];
+  var pasFotoTersimpan = false;
+  if(berkasDaftar){
+    var simpanAwal = await cobaSimpanPasFotoDaftar(email, berkasDaftar);
+    pasFotoTersimpan = !!(simpanAwal && simpanAwal.ok);
+  }
   tampilKonfirmasi(email);
+  if(berkasDaftar && !pasFotoTersimpan){
+    el("teksKonfirmasi").textContent += " Pas foto Anda akan diminta saat masuk pertama kali.";
+  }
   return {ok:true};
 }
 function tampilKonfirmasi(email){
@@ -899,7 +2354,10 @@ async function keluar(){
   if(c && c.auth && c.auth.signOut){ try{ await c.auth.signOut(); }catch(e){} }
   S.user = null; S.email = null; S.nama = null; S.peran = [];
   S.namaUsaha = null; S.sops = []; S.jalankan = {};
+  S.pemilikId = null; S.fotoPath = null; S.laporan = [];
+  S.perluDicek = []; S.presensi = null; S.presensiRiwayat = [];
   el("layarDashboard").classList.add("hidden");
+  el("layarPasFoto").classList.add("hidden");
   el("layarMasuk").classList.remove("hidden");
   tampilPanel("panelMasuk");
 }
@@ -928,7 +2386,7 @@ function tampilLayar(nama){
   S.layar = nama;
   var btns = document.querySelectorAll("#tabbar button");
   btns.forEach(function(b){ b.classList.toggle("aktif", b.getAttribute("data-layar") === nama); });
-  ["sop","peran","profil"].forEach(function(l){
+  ["sop","laporan","perluDicek","presensi","peran","profil"].forEach(function(l){
     el("layar" + l.charAt(0).toUpperCase() + l.slice(1)).classList.toggle("aktif", l === nama);
   });
 }
@@ -944,6 +2402,9 @@ function tampilDashboard(){
 }
 async function muatLayarAktif(){
   if(S.layar === "sop") return muatSop();
+  if(S.layar === "laporan") return muatLaporan();
+  if(S.layar === "perluDicek") return muatPerluDicek();
+  if(S.layar === "presensi") return muatPresensi();
   if(S.layar === "peran") return muatPeran();
   if(S.layar === "profil") return muatProfil();
   return {ok:false};
@@ -959,10 +2420,31 @@ async function muatLayarAktif(){
    dan cocok dengan angka yang disimpan RPC (satu angka per SOP per
    hari). Centang hari ini dimuat ulang dari cloud setiap kali layar
    dibuka, supaya tetap sama setelah halaman dimuat ulang. */
+function fmtJam(t){
+  if(!t) return "—";
+  try{
+    var d = new Date(t);
+    if(isNaN(d.getTime())) return "—";
+    return d.toLocaleTimeString("id-ID", {hour:"2-digit", minute:"2-digit"});
+  }catch(e){ return "—"; }
+}
+/* Nama pemeriksa SOP: kolom pengecek; bila kosong berarti pemilik
+   usaha yang memeriksa (keputusan migrasi — SOP lama tanpa pengecek
+   tampil sebagai "Pemilik"). */
+function namaPengecek(sop){
+  var p = (sop && sop.pengecek != null) ? String(sop.pengecek).trim() : "";
+  return p || "Pemilik";
+}
 function petaJalankan(rows){
   var peta = {};
   (Array.isArray(rows) ? rows : []).forEach(function(r){
-    if(r && r.sop_id) peta[r.sop_id] = {langkah_selesai: Number(r.langkah_selesai) || 0, selesai: r.selesai === true};
+    if(r && r.sop_id) peta[r.sop_id] = {
+      langkah_selesai: Number(r.langkah_selesai) || 0,
+      selesai: r.selesai === true,
+      dicek_oleh: r.dicek_oleh || null,
+      dicek_pada: r.dicek_pada || null,
+      catatan: (r.catatan != null ? String(r.catatan) : null)
+    };
   });
   return peta;
 }
@@ -972,20 +2454,32 @@ function htmlSopCard(sop){
   var j = S.jalankan[id] || {langkah_selesai:0, selesai:false};
   var selesaiCount = Math.min(j.langkah_selesai, steps.length);
   var semua = steps.length > 0 && selesaiCount >= steps.length;
+  var pengecek = namaPengecek(sop);
+  var status = semua
+    ? (j.dicek_oleh
+        ? "Sudah dicek oleh " + j.dicek_oleh + " — semua " + steps.length + " langkah sudah dicentang."
+        : "Selesai hari ini — menunggu dicek oleh " + pengecek + ".")
+    : selesaiCount + " dari " + steps.length + " langkah hari ini.";
   var html = '<div class="sop-card" data-sop-id="' + esc(id) + '">'
     + '<h3>' + esc(sop.nama || "SOP tanpa nama") + '</h3>'
     + '<p class="meta">Penanggung jawab: ' + esc(sop.pj || "—") + '</p>'
+    + '<p class="meta">Dicek oleh: ' + esc(pengecek) + '</p>'
     + (sop.tujuan ? '<p class="tujuan">Tujuan: ' + esc(sop.tujuan) + '</p>' : '')
     + '<p class="kemajuan' + (semua ? " selesai" : "") + '" data-kemajuan="' + esc(id) + '">'
-    + (semua ? "Selesai hari ini — semua " + steps.length + " langkah sudah dicentang."
-             : selesaiCount + " dari " + steps.length + " langkah hari ini.")
+    + esc(status)
     + '</p>';
   steps.forEach(function(langkah, i){
     var cek = i < selesaiCount ? " checked" : "";
     html += '<label class="langkah"><input type="checkbox" data-sop-id="' + esc(id) + '" data-langkah="' + i + '"' + cek + '>'
       + '<span class="teks">' + (i + 1) + ". " + esc(langkah) + '</span></label>';
   });
-  html += '<div class="row" style="margin-top:12px">'
+  html += '<label>Catatan hari ini (boleh kosong)</label>'
+    + '<textarea class="catatan-sop" data-catatan-sop="' + esc(id) + '" placeholder="contoh: Bahan gula habis, sudah saya catat di kwitansi">' + esc(j.catatan || "") + '</textarea>'
+    + '<div class="row" style="margin-top:10px">'
+    + '<button type="button" class="kecil ghost" data-bantu-sop="' + esc(id) + '">Bantu tulis</button>'
+    + '<button type="button" class="kecil" data-simpan-catatan="' + esc(id) + '">Simpan catatan</button>'
+    + '</div>'
+    + '<div class="row" style="margin-top:12px">'
     + '<button type="button" class="kecil" data-selesai-sop="' + esc(id) + '"' + (semua ? " disabled" : "") + '>Selesai jalankan SOP</button>'
     + '</div></div>';
   return html;
@@ -1016,10 +2510,13 @@ async function muatSop(){
   return hasil;
 }
 /* Mencatat centang ke cloud. dipanggil setiap kali centang berubah,
-   dan oleh tombol "Selesai jalankan SOP". */
-async function catatCentang(sopId, langkahSelesai, selesai){
+   dan oleh tombol "Selesai jalankan SOP". Parameter catatan opsional:
+   bila tidak dikirim (null), catatan lama di cloud dipertahankan;
+   bila dikirim, catatan diganti. */
+async function catatCentang(sopId, langkahSelesai, selesai, catatan){
   var hasil = await panggilRpc("catat_sop_jalankan", {
-    p_sop_id: sopId, p_langkah_selesai: langkahSelesai, p_selesai: selesai
+    p_sop_id: sopId, p_langkah_selesai: langkahSelesai, p_selesai: selesai,
+    p_catatan: (catatan != null ? catatan : null)
   });
   if(!hasil.ok){
     if(hasil.setup){ tampilkanKotakSetup(); tampilPopup("Fitur ini belum aktif","Fitur ini belum aktif — pengaturan cloud belum dijalankan."); }
@@ -1027,16 +2524,35 @@ async function catatCentang(sopId, langkahSelesai, selesai){
     return hasil;
   }
   var d = hasil.data || {};
+  var lama = S.jalankan[sopId] || {};
   S.jalankan[sopId] = {
     langkah_selesai: Number(d.langkah_selesai != null ? d.langkah_selesai : langkahSelesai) || 0,
-    selesai: d.selesai === true
+    selesai: d.selesai === true,
+    dicek_oleh: d.dicek_oleh || null,
+    dicek_pada: d.dicek_pada || null,
+    catatan: (d.catatan !== undefined ? d.catatan : (lama.catatan || null))
   };
   perbaruiKartuSop(sopId);
+  return hasil;
+}
+/* Menyimpan catatan SOP hari ini dari kolom catatan di kartu SOP. */
+async function simpanCatatan(sopId){
+  var ta = document.querySelector('textarea[data-catatan-sop="' + sopId + '"]');
+  var nilai = ta ? (ta.value || "") : "";
+  var j = S.jalankan[sopId] || {langkah_selesai:0, selesai:false};
+  var hasil = await catatCentang(sopId, j.langkah_selesai, j.selesai, nilai);
+  if(hasil.ok) tampilPopup("Catatan tersimpan", "Catatan Anda untuk SOP ini sudah tersimpan.");
   return hasil;
 }
 function perbaruiKartuSop(sopId){
   var kartu = document.querySelector('.sop-card[data-sop-id="' + sopId + '"]');
   if(!kartu) return;
+  /* Catatan yang sedang diketik (belum disimpan) dipertahankan
+     melewati gambar ulang kartu — hanya catatan tersimpan yang
+     diganti lewat S.jalankan. */
+  var drafCatatan = null;
+  var ta = kartu.querySelector('textarea[data-catatan-sop="' + sopId + '"]');
+  if(ta) drafCatatan = ta.value;
   var sop = null;
   S.sops.forEach(function(s){ if(String(s.id) === String(sopId)) sop = s; });
   if(!sop) return;
@@ -1044,6 +2560,10 @@ function perbaruiKartuSop(sopId){
   var tmp = document.createElement("div");
   tmp.innerHTML = html;
   kartu.replaceWith(tmp.firstChild);
+  if(drafCatatan !== null){
+    var ta2 = document.querySelector('textarea[data-catatan-sop="' + sopId + '"]');
+    if(ta2) ta2.value = drafCatatan;
+  }
 }
 async function ubahCentang(checkbox){
   var sopId = checkbox.getAttribute("data-sop-id");
@@ -1072,6 +2592,407 @@ async function selesaikanSop(sopId){
   if(hasil.ok){
     tampilPopup("SOP selesai", "Terima kasih — \"" + (sop.nama || "SOP") + "\" sudah dicatat selesai hari ini.");
   }
+  return hasil;
+}
+
+/* ===== Layar 2: Perlu dicek (pegawai sebagai pemeriksa SOP) ===== */
+/* Daftar pekerjaan pegawai LAIN yang sudah selesai dan menunggu dicek
+   oleh pegawai yang masuk — pemilik usaha menunjuknya sebagai
+   pemeriksa lewat kolom "pengecek" di SOP. RPC mengembalikan array
+   JSON langsung (bukan dibungkus), jadi dipanggil lewat c.rpc
+   langsung seperti muatLaporan — panggilRpc akan membuang semua
+   baris kecuali yang pertama. */
+async function muatPerluDicek(){
+  var box = el("cekIsi");
+  box.innerHTML = '<p class="muted">Memuat daftar…</p>';
+  var c = getClient();
+  if(!c){ box.innerHTML = pesanSetupHtml(); tampilkanKotakSetup(); return {ok:false, setup:true}; }
+  var r;
+  try{ r = await c.rpc("perlu_dicek_untuk_pegawai", {}); }
+  catch(e){
+    if(apakahErrorSetup(e)){ box.innerHTML = pesanSetupHtml(); tampilkanKotakSetup(); return {ok:false, setup:true, error:e}; }
+    box.innerHTML = '<p class="muted">Daftar belum bisa dimuat.</p>'; tampilPopup("Belum bisa memuat", pesanRamah(e)); return {ok:false, error:e};
+  }
+  if(r.error){
+    if(apakahErrorSetup(r.error)){ box.innerHTML = pesanSetupHtml(); tampilkanKotakSetup(); return {ok:false, setup:true, error:r.error}; }
+    box.innerHTML = '<p class="muted">Daftar belum bisa dimuat.</p>'; tampilPopup("Belum bisa memuat", pesanRamah(r.error)); return {ok:false, error:r.error};
+  }
+  var daftar = Array.isArray(r.data) ? r.data : [];
+  S.perluDicek = daftar;
+  if(!daftar.length){
+    box.innerHTML = '<p class="muted">Tidak ada pekerjaan yang perlu Anda cek.</p>';
+    return {ok:true};
+  }
+  box.innerHTML = daftar.map(function(x){
+    return '<div class="cek-baris">'
+      + '<b>' + esc(x.pegawai_nama || x.pegawai_email || "Pegawai") + '</b>'
+      + '<span class="muted"> — ' + esc(x.sop_nama || "SOP") + ' · ' + esc(fmtTanggal(x.tanggal)) + ' · ' + esc(String(x.langkah_selesai != null ? x.langkah_selesai : "—")) + ' langkah</span>'
+      + '<div class="row" style="margin-top:8px"><button type="button" class="kecil" data-verifikasi-sop="' + esc(x.sop_id || "") + '" data-verifikasi-email="' + esc(x.pegawai_email || "") + '" data-verifikasi-tanggal="' + esc(x.tanggal || "") + '">Tandai sudah dicek</button></div>'
+      + '</div>';
+  }).join("");
+  return {ok:true};
+}
+async function verifikasiSop(sopId, pegawaiEmail, tanggal){
+  var hasil = await panggilRpc("verifikasi_sop_jalankan", {
+    p_pegawai_email: pegawaiEmail, p_sop_id: sopId, p_tanggal: tanggal
+  });
+  if(!hasil.ok){
+    if(hasil.setup){ tampilkanKotakSetup(); tampilPopup("Fitur ini belum aktif", "Fitur ini belum aktif — pengaturan cloud belum dijalankan."); }
+    else { tampilPopup("Belum bisa menandai", pesanRamah(hasil.error)); }
+    return hasil;
+  }
+  await muatPerluDicek();
+  tampilPopup("Sudah dicek", "Terima kasih — pekerjaan itu sudah ditandai sudah dicek.");
+  return hasil;
+}
+
+/* ===== Layar 3: Presensi (Masuk / Pulang, tanpa lokasi) ===== */
+/* Presensi TIDAK memakai lokasi/GPS — hanya stempel waktu server.
+   Ketukan Masuk/Pulang kedua pada hari yang sama tidak menimpa
+   stempel pertama (aturan server). */
+async function muatPresensi(){
+  var box = el("presStatus");
+  el("presTanggal").textContent = "Presensi hari ini — " + tanggalHariIni() + ".";
+  box.innerHTML = '<p class="muted">Memuat presensi…</p>';
+  var hasil = await panggilRpc("presensi_saya", {});
+  if(!hasil.ok){
+    if(hasil.setup){ box.innerHTML = pesanSetupHtml(); tampilkanKotakSetup(); }
+    else { box.innerHTML = '<p class="muted">Presensi belum bisa dimuat.</p>'; tampilPopup("Belum bisa memuat", pesanRamah(hasil.error)); }
+    return hasil;
+  }
+  var d = hasil.data || {};
+  S.presensi = d.hari_ini || null;
+  S.presensiRiwayat = Array.isArray(d.riwayat) ? d.riwayat : [];
+  tampilPresensi();
+  return hasil;
+}
+function tampilPresensi(){
+  var p = S.presensi;
+  var masuk = p && p.masuk_pada ? fmtJam(p.masuk_pada) : null;
+  var pulang = p && p.pulang_pada ? fmtJam(p.pulang_pada) : null;
+  el("presStatus").innerHTML = '<p>Masuk: <b>' + (masuk || "belum masuk") + '</b></p>'
+    + '<p style="margin-top:4px">Pulang: <b>' + (pulang || "belum pulang") + '</b></p>';
+  el("btnPresMasuk").disabled = !!masuk;
+  el("btnPresPulang").disabled = !!pulang;
+  var rw = S.presensiRiwayat;
+  el("presRiwayat").innerHTML = rw.length
+    ? rw.map(function(x){
+        return '<p class="muted">' + esc(fmtTanggal(x.tanggal)) + ' — Masuk ' + esc(fmtJam(x.masuk_pada)) + ' · Pulang ' + esc(fmtJam(x.pulang_pada)) + '</p>';
+      }).join("")
+    : '<p class="muted">Belum ada presensi di 7 hari terakhir.</p>';
+}
+async function catatPresensi(jenis){
+  var hasil = await panggilRpc("catat_presensi", {p_jenis: jenis});
+  if(!hasil.ok){
+    if(hasil.setup){ tampilkanKotakSetup(); tampilPopup("Fitur ini belum aktif", "Fitur ini belum aktif — pengaturan cloud belum dijalankan."); }
+    else { tampilPopup("Belum bisa mencatat presensi", pesanRamah(hasil.error)); }
+    return hasil;
+  }
+  var d = hasil.data || {};
+  S.presensi = {tanggal: d.tanggal, masuk_pada: d.masuk_pada, pulang_pada: d.pulang_pada};
+  tampilPresensi();
+  tampilPopup(jenis === "masuk" ? "Masuk tercatat" : "Pulang tercatat",
+    jenis === "masuk"
+      ? "Masuk Anda hari ini tercatat pukul " + fmtJam(d.masuk_pada) + "."
+      : "Pulang Anda hari ini tercatat pukul " + fmtJam(d.pulang_pada) + ".");
+  return hasil;
+}
+
+/* ===== Bantuan AI untuk menulis isian ("Bantu tulis") ===== */
+/* AI hanya menyusun DRAF TEKS untuk isian pegawai (keterangan
+   kwitansi, caption foto, catatan SOP) — draf dimasukkan ke kolom
+   untuk diedit pegawai dan TIDAK PERNAH disimpan otomatis. AI TIDAK
+   PERNAH membuat angka: jumlah kwitansi selalu dari kolom angka yang
+   diisi pegawai sendiri. Panggilan lewat proxy sisi server
+   /api/ai-chat (same-origin) — kunci TIDAK PERNAH ada di frontend.
+   Pemakaian dihitung ke kuota pemilik (batas lunak 20/pegawai/bulan);
+   bila batas tercapai, proxy menjawab 429 dan pegawai tetap bisa
+   menulis isiannya sendiri. */
+async function bantuTulis(jenis, konteks){
+  var target = null;
+  if(jenis === "foto") target = el("lapFotoKet");
+  else if(jenis === "kwitansi") target = el("lapKwitKet");
+  else if(jenis === "sop" && konteks) target = document.querySelector('textarea[data-catatan-sop="' + konteks + '"]');
+  if(!target) return {ok:false};
+  var seed = (target.value || "").trim();
+  if(!seed){
+    tampilPopup("Tulis dulu beberapa kata", "Ketik dulu beberapa kata tentang isian ini, lalu ketuk \"Bantu tulis\" — AI akan menyusun drafnya untuk Anda edit.");
+    return {ok:false};
+  }
+  if(typeof fetch !== "function"){
+    tampilPopup("AI belum tersambung", "Bantuan AI belum tersambung di aplikasi ini. Anda tetap bisa menulis isiannya sendiri.");
+    return {ok:false};
+  }
+  var token = null;
+  try{
+    var c = getClient();
+    if(c && c.auth && c.auth.getSession){
+      var s = await c.auth.getSession();
+      if(s && s.data && s.data.session) token = s.data.session.access_token || null;
+    }
+  }catch(e){ token = null; }
+  var kepala = {"Content-Type":"application/json"};
+  if(token) kepala.Authorization = "Bearer " + token;
+  var res;
+  try{
+    res = await fetch("/api/ai-chat", {
+      method: "POST",
+      headers: kepala,
+      body: JSON.stringify({jenis: jenis, teks: seed, tier: null})
+    });
+  }catch(e){
+    tampilPopup("AI belum tersambung", "Bantuan AI belum tersambung. Periksa jaringan Anda, lalu coba lagi.");
+    return {ok:false};
+  }
+  var body = null;
+  try{ body = await res.json(); }catch(e2){ body = null; }
+  if(!res.ok){
+    if(res.status === 429){
+      tampilPopup("Batas bantuan AI bulan ini tercapai", (body && body.error) ? body.error : "Bantuan AI untuk Anda bulan ini sudah mencapai batas (20 kali). Anda tetap bisa menulis isiannya sendiri.");
+    }else if(res.status === 503){
+      tampilPopup("AI belum tersambung", (body && body.error) ? body.error : "Layanan AI belum tersambung. Anda tetap bisa menulis isiannya sendiri.");
+    }else{
+      tampilPopup("Belum bisa meminta bantuan", (body && body.error) ? body.error : "Bantuan AI belum bisa dipakai saat ini. Anda tetap bisa menulis isiannya sendiri.");
+    }
+    return {ok:false};
+  }
+  var draf = (body && body.draf) ? String(body.draf) : "";
+  if(!draf){
+    tampilPopup("Belum ada draf", "AI belum mengembalikan draf. Coba lagi dengan kata yang berbeda.");
+    return {ok:false};
+  }
+  target.value = draf;
+  return {ok:true, draf:draf};
+}
+
+/* ===== Laporan + Pas Foto ===== */
+/* KEBIJAKAN FOTO (sama untuk foto laporan dan pas foto): kompresi di
+   HP pegawai SEBELUM diunggah — kanvas maks 1200px, JPEG 0.7, target
+   ~100–300 KB, tipikal ~150 KB. Batas 5 foto per hari hanya untuk
+   foto LAPORAN (ditegakkan RPC kirim di cloud); pas foto sekali per
+   pegawai dan TIDAK dihitung ke batas itu. PRIVASI: jumlah pada
+   kwitansi adalah data kwitansi itu sendiri yang diserahkan pegawai,
+   BUKAN angka keuangan usaha — pegawai hanya melihat laporannya
+   sendiri, pemilik melihat laporan pegawainya sendiri. */
+function uuidBaru(){
+  try{ if(window.crypto && crypto.randomUUID) return crypto.randomUUID(); }catch(e){}
+  return "id-" + Date.now().toString(36) + "-" + Math.floor(Math.random()*1e9).toString(36);
+}
+function kompresFoto(file){
+  return new Promise(function(selesai){
+    if(!file){ selesai(null); return; }
+    var kanvas = null, ctx = null;
+    try{ kanvas = document.createElement("canvas"); ctx = kanvas.getContext && kanvas.getContext("2d"); }catch(e){ ctx = null; }
+    /* Peramban tanpa kanvas (atau kanvas belum siap): pakai berkas
+       asli apa adanya — laporan tetap terkirim, hanya tidak terkompres. */
+    if(!kanvas || !ctx){ selesai(file); return; }
+    var url = null;
+    try{ url = URL.createObjectURL(file); }catch(e){ selesai(file); return; }
+    var img = new Image();
+    img.onload = function(){
+      try{
+        var w = img.naturalWidth || img.width || 0, h = img.naturalHeight || img.height || 0;
+        if(!w || !h){ selesai(file); return; }
+        var skala = Math.min(1, 1200 / Math.max(w, h));
+        kanvas.width = Math.max(1, Math.round(w * skala));
+        kanvas.height = Math.max(1, Math.round(h * skala));
+        ctx.drawImage(img, 0, 0, kanvas.width, kanvas.height);
+        if(kanvas.toBlob){
+          kanvas.toBlob(function(b){
+            try{ if(url) URL.revokeObjectURL(url); }catch(e2){}
+            selesai(b || file);
+          }, "image/jpeg", 0.7);
+        }else{ selesai(file); }
+      }catch(e){ selesai(file); }
+    };
+    img.onerror = function(){ selesai(file); };
+    img.src = url;
+  });
+}
+/* Tautan bertanda tangan 1 jam untuk membuka satu foto privat — tidak
+   pernah tautan publik. */
+async function fotoUrl(path){
+  if(!path) return null;
+  var c = getClient();
+  if(!c || !c.storage) return null;
+  try{
+    var r = await c.storage.from("bukti-pegawai").createSignedUrl(path, 3600);
+    if(r && !r.error && r.data && r.data.signedUrl) return r.data.signedUrl;
+  }catch(e){}
+  return null;
+}
+async function unggahBerkas(file, path){
+  var c = getClient();
+  if(!c || !c.storage) return {ok:false, setup:true};
+  var blob = await kompresFoto(file);
+  if(!blob) return {ok:false};
+  var r;
+  try{ r = await c.storage.from("bukti-pegawai").upload(path, blob, {contentType:"image/jpeg", upsert:false}); }
+  catch(e){ return {ok:false, error:e}; }
+  if(r.error) return {ok:false, error:r.error};
+  return {ok:true, path:path};
+}
+/* Mengunggah pas foto wajah pegawai yang masuk + menyimpan jalurnya
+   lewat RPC simpan_pas_foto. diam=true: tanpa popup (dipakai alur
+   daftar — bila belum bisa, gerbang masuk yang akan meminta). */
+async function unggahPasFoto(file, diam){
+  if(!file){ if(!diam) tampilPopup("Pas foto belum dipilih","Pilih foto wajah Anda dulu, lalu ketuk Simpan pas foto."); return {ok:false}; }
+  if(!S.pemilikId){ if(!diam) tampilPopup("Belum bisa mengunggah","Coba masuk lagi, lalu unggah pas foto Anda."); return {ok:false}; }
+  var email = String(S.email || S.emailKonfirmasi || "").toLowerCase();
+  if(!email){ if(!diam) tampilPopup("Belum bisa mengunggah","Coba masuk lagi, lalu unggah pas foto Anda."); return {ok:false}; }
+  var path = "pasfoto/" + S.pemilikId + "/" + email + "/" + uuidBaru() + ".jpg";
+  var up = await unggahBerkas(file, path);
+  if(!up.ok){ if(!diam) tampilPopup("Belum bisa menyimpan pas foto", pesanRamah(up.error)); return {ok:false, error:up.error}; }
+  var hasil = await panggilRpc("simpan_pas_foto", {p_foto_path: path});
+  if(!hasil.ok){
+    if(hasil.setup) tampilkanKotakSetup();
+    if(!diam) tampilPopup("Belum bisa menyimpan pas foto", pesanRamah(hasil.error));
+    return {ok:false, error:hasil.error};
+  }
+  S.fotoPath = path;
+  return {ok:true, path:path};
+}
+function tampilkanGerPasFoto(){
+  el("layarMasuk").classList.add("hidden");
+  el("layarDashboard").classList.add("hidden");
+  el("layarPasFoto").classList.remove("hidden");
+}
+async function simpanPasFotoDariGer(){
+  var inp = el("pasFotoFile");
+  var file = inp && inp.files && inp.files[0];
+  var hasil = await unggahPasFoto(file, false);
+  if(!hasil.ok) return hasil;
+  el("layarPasFoto").classList.add("hidden");
+  tampilDashboard();
+  await muatLayarAktif();
+  tampilPopup("Pas foto tersimpan","Terima kasih — pas foto Anda sudah tersimpan. Pemilik usaha kini bisa mengenali Anda.");
+  return hasil;
+}
+/* Upaya simpan pas foto di alur daftar (diam — bila pemilik belum
+   mendaftarkan email ini, atau sesi belum terbentuk, gerbang masuk
+   yang akan meminta pas foto). */
+async function cobaSimpanPasFotoDaftar(email, file){
+  if(!file) return {ok:false, ditunda:true};
+  var akses = await periksaAkses(String(email || "").toLowerCase());
+  if(!akses.ok || !akses.pemilikId) return {ok:false, ditunda:true};
+  var emailLama = S.email, pemilikLama = S.pemilikId, fotoLama = S.fotoPath;
+  S.email = String(email).toLowerCase(); S.pemilikId = akses.pemilikId;
+  var hasil = await unggahPasFoto(file, true);
+  S.email = emailLama; S.pemilikId = pemilikLama;
+  if(!hasil.ok){ S.fotoPath = fotoLama; return {ok:false, ditunda:true, error:hasil.error}; }
+  S.fotoPath = fotoLama;
+  return hasil;
+}
+function berkasDipilih(id){
+  var inp = el(id);
+  return inp && inp.files && inp.files[0] ? inp.files[0] : null;
+}
+function opsiSopHtml(){
+  var html = '<option value="">Tidak terkait SOP</option>';
+  S.sops.forEach(function(s){
+    html += '<option value="' + esc(s.id || "") + '">' + esc(s.nama || "SOP") + '</option>';
+  });
+  return html;
+}
+function isiOpsiSopLaporan(){
+  ["lapFotoSop","lapKwitSop"].forEach(function(id){
+    var s = el(id);
+    if(s) s.innerHTML = opsiSopHtml();
+  });
+}
+function labelJenisLaporan(jenis){ return jenis === "kwitansi" ? "Kwitansi" : "Foto"; }
+function statusLaporan(r){ return r && r.dicatat ? "Sudah dicatat pemilik" : "Tercatat"; }
+async function htmlLaporanCard(r){
+  var html = '<div class="sop-card"><h3>' + esc(labelJenisLaporan(r.jenis)) + ' — ' + esc(fmtTanggal(r.tanggal)) + '</h3>'
+    + '<p class="meta">' + esc(r.keterangan || "—") + '</p>'
+    + ((r.jenis === "kwitansi" && r.jumlah != null)
+        ? '<p class="meta">Jumlah: Rp ' + esc(Number(r.jumlah).toLocaleString("id-ID")) + '</p>' : '')
+    + (r.sop_nama ? '<p class="meta">SOP: ' + esc(r.sop_nama) + '</p>' : '')
+    + '<p class="kemajuan">' + esc(statusLaporan(r)) + '</p>';
+  if(r.file_path){
+    var url = await fotoUrl(r.file_path);
+    if(url) html += '<p style="margin-top:10px"><img src="' + esc(url) + '" alt="Foto laporan" class="lap-thumb"></p>';
+    else html += '<p class="muted" style="margin-top:10px">Foto belum bisa ditampilkan — periksa koneksi Anda, lalu buka lagi layar ini.</p>';
+  }
+  html += '</div>';
+  return html;
+}
+async function muatLaporan(){
+  var box = el("lapIsi");
+  isiOpsiSopLaporan();
+  if(!S.sops.length){
+    var awal = await muatSop();
+    if(awal.ok) isiOpsiSopLaporan();
+  }
+  box.innerHTML = '<p class="muted">Memuat laporan…</p>';
+  /* laporan_saya mengembalikan larik JSON mentah (bukan satu baris
+     tabel), jadi dipanggil langsung — bukan lewat panggilRpc yang
+     membuka larik hasil RPC tabel menjadi baris pertama. */
+  var c = getClient();
+  if(!c){ box.innerHTML = pesanSetupHtml(); tampilkanKotakSetup(); return {ok:false, setup:true}; }
+  var r;
+  try{ r = await c.rpc("laporan_saya", {}); }
+  catch(e){
+    if(apakahErrorSetup(e)){ box.innerHTML = pesanSetupHtml(); tampilkanKotakSetup(); return {ok:false, setup:true, error:e}; }
+    box.innerHTML = '<p class="muted">Laporan belum bisa dimuat.</p>'; tampilPopup("Belum bisa memuat", pesanRamah(e));
+    return {ok:false, error:e};
+  }
+  if(r.error){
+    if(apakahErrorSetup(r.error)){ box.innerHTML = pesanSetupHtml(); tampilkanKotakSetup(); return {ok:false, setup:true, error:r.error}; }
+    box.innerHTML = '<p class="muted">Laporan belum bisa dimuat.</p>'; tampilPopup("Belum bisa memuat", pesanRamah(r.error));
+    return {ok:false, error:r.error};
+  }
+  var rows = Array.isArray(r.data) ? r.data : [];
+  S.laporan = rows;
+  if(!rows.length){
+    box.innerHTML = '<div class="belum-cukup"><p>Belum ada laporan.</p><p class="muted" style="margin-top:6px">Kirim foto kegiatan atau kwitansi pertama Anda di atas.</p></div>';
+    return {ok:true, data:rows};
+  }
+  var html = "";
+  for(var i = 0; i < rows.length; i++){ html += await htmlLaporanCard(rows[i]); }
+  box.innerHTML = html;
+  return {ok:true, data:rows};
+}
+async function kirimLaporanFoto(keterangan, sopId, file){
+  keterangan = String(keterangan || "").trim();
+  if(!keterangan){ tampilPopup("Keterangan belum diisi","Tulis keterangan fotonya dulu, contoh: Warung sudah rapi sebelum buka."); return {ok:false}; }
+  if(!file){ tampilPopup("Foto belum dipilih","Pilih foto dulu, lalu ketuk Kirim foto."); return {ok:false}; }
+  if(!S.pemilikId){ tampilPopup("Belum bisa mengirim","Coba masuk lagi, lalu kirim laporan Anda."); return {ok:false}; }
+  var email = String(S.email || "").toLowerCase();
+  var path = S.pemilikId + "/" + email + "/" + uuidBaru() + ".jpg";
+  var up = await unggahBerkas(file, path);
+  if(!up.ok){ tampilPopup("Foto belum bisa diunggah", pesanRamah(up.error)); return {ok:false, error:up.error}; }
+  var hasil = await panggilRpc("kirim_laporan_pegawai", {p_jenis:"foto", p_keterangan:keterangan, p_jumlah:null, p_file_path:path, p_sop_id:sopId || null});
+  if(!hasil.ok){
+    if(hasil.setup){ tampilkanKotakSetup(); tampilPopup("Fitur ini belum aktif","Fitur ini belum aktif — pengaturan cloud belum dijalankan."); }
+    else { tampilPopup("Laporan belum terkirim", pesanRamah(hasil.error)); }
+    return hasil;
+  }
+  await muatLaporan();
+  tampilPopup("Foto terkirim","Terima kasih — foto Anda sudah terkirim ke pemilik usaha.");
+  return hasil;
+}
+async function kirimKwitansi(jumlah, keterangan, sopId, file){
+  jumlah = Number(jumlah);
+  keterangan = String(keterangan || "").trim();
+  if(!(jumlah > 0)){ tampilPopup("Jumlah belum benar","Isi jumlah kwitansi dalam rupiah — harus lebih dari Rp 0."); return {ok:false}; }
+  if(!keterangan){ tampilPopup("Keterangan belum diisi","Tulis kwitansi ini untuk apa, contoh: Beli gula 5 kg."); return {ok:false}; }
+  if(!S.pemilikId){ tampilPopup("Belum bisa mengirim","Coba masuk lagi, lalu kirim laporan Anda."); return {ok:false}; }
+  var path = null;
+  if(file){
+    var email = String(S.email || "").toLowerCase();
+    path = S.pemilikId + "/" + email + "/" + uuidBaru() + ".jpg";
+    var up = await unggahBerkas(file, path);
+    if(!up.ok){ tampilPopup("Foto kwitansi belum bisa diunggah", pesanRamah(up.error)); return {ok:false, error:up.error}; }
+  }
+  var hasil = await panggilRpc("kirim_laporan_pegawai", {p_jenis:"kwitansi", p_keterangan:keterangan, p_jumlah:jumlah, p_file_path:path, p_sop_id:sopId || null});
+  if(!hasil.ok){
+    if(hasil.setup){ tampilkanKotakSetup(); tampilPopup("Fitur ini belum aktif","Fitur ini belum aktif — pengaturan cloud belum dijalankan."); }
+    else { tampilPopup("Laporan belum terkirim", pesanRamah(hasil.error)); }
+    return hasil;
+  }
+  await muatLaporan();
+  tampilPopup("Kwitansi terkirim","Terima kasih — kwitansi Anda sudah terkirim ke pemilik usaha.");
   return hasil;
 }
 
@@ -1129,7 +3050,8 @@ function htmlProfil(){
     + (S.peran.length
         ? '<p>' + S.peran.map(function(p){ return esc(namaPeran(p)); }).join(", ") + '</p>'
         : '<p class="muted">Belum dicatat pemilik usaha.</p>')
-    + '<p class="muted" style="margin-top:14px">Aplikasi Pegawai — UMKM Tumbuh. Bila ada yang perlu diubah (nama, peran), beri tahu pemilik usaha.</p>';
+    + '<p class="muted" style="margin-top:14px">Aplikasi Pegawai — UMKM Tumbuh. Bila ada yang perlu diubah (nama, peran), beri tahu pemilik usaha.</p>'
+    + '<p style="margin-top:14px"><b>Pas foto</b></p><div id="profilFoto"><p class="muted">Memuat pas foto…</p></div>';
   return html;
 }
 async function muatProfil(){
@@ -1140,7 +3062,32 @@ async function muatProfil(){
     tampilLayar("profil");
   }
   box.innerHTML = htmlProfil();
+  await isiFotoProfil();
   return {ok:true};
+}
+/* Pas foto pegawai yang masuk (hanya fotonya sendiri, lewat tautan
+   bertanda tangan 1 jam — tidak pernah foto pegawai lain). */
+async function isiFotoProfil(){
+  var wadah = el("profilFoto");
+  if(!wadah) return;
+  if(!S.fotoPath){ wadah.innerHTML = '<p class="muted">Pas foto belum ada.</p>'; return; }
+  var url = await fotoUrl(S.fotoPath);
+  wadah.innerHTML = url
+    ? '<img src="' + esc(url) + '" alt="Pas foto Anda" class="pasfoto-mini">'
+    : '<p class="muted">Pas foto belum bisa ditampilkan — periksa koneksi Anda, lalu buka lagi layar ini.</p>';
+}
+
+/* Pratinjau pas foto yang baru dipilih (hanya di HP pegawai sendiri). */
+function pratinjauBerkas(idInput, idWadah){
+  var wadah = el(idWadah);
+  if(!wadah) return;
+  var f = berkasDipilih(idInput);
+  if(!f){ wadah.innerHTML = ""; return; }
+  var url = null;
+  try{ url = URL.createObjectURL(f); }catch(e){ url = null; }
+  wadah.innerHTML = url
+    ? '<img src="' + esc(url) + '" alt="Pratinjau pas foto" class="pasfoto-mini">'
+    : '<p class="muted">Dipilih: ' + esc(f.name || "foto") + '</p>';
 }
 
 /* ===== Init & event ===== */
@@ -1161,6 +3108,24 @@ function bindEvents(){
   el("btnKeluar").addEventListener("click", keluar);
   el("btnKeluarProfil").addEventListener("click", keluar);
   el("btnSalinSql").addEventListener("click", salinSql);
+  el("btnKirimFoto").addEventListener("click", async function(){
+    var hasil = await kirimLaporanFoto(el("lapFotoKet").value, el("lapFotoSop").value, berkasDipilih("lapFotoFile"));
+    if(hasil.ok){ el("lapFotoKet").value = ""; el("lapFotoFile").value = ""; el("lapFotoNama").textContent = ""; el("lapFotoSop").value = ""; }
+  });
+  el("btnKirimKwitansi").addEventListener("click", async function(){
+    var hasil = await kirimKwitansi(el("lapKwitJumlah").value, el("lapKwitKet").value, el("lapKwitSop").value, berkasDipilih("lapKwitFotoFile"));
+    if(hasil.ok){ el("lapKwitJumlah").value = ""; el("lapKwitKet").value = ""; el("lapKwitFotoFile").value = ""; el("lapKwitFotoNama").textContent = ""; el("lapKwitSop").value = ""; }
+  });
+  el("btnSimpanPasFoto").addEventListener("click", simpanPasFotoDariGer);
+  el("btnKeluarGer").addEventListener("click", keluar);
+  el("btnPresMasuk").addEventListener("click", async function(){ await catatPresensi("masuk"); });
+  el("btnPresPulang").addEventListener("click", async function(){ await catatPresensi("pulang"); });
+  el("btnMuatCek").addEventListener("click", muatPerluDicek);
+  el("btnMuatPres").addEventListener("click", muatPresensi);
+  el("pasFotoFile").addEventListener("change", function(){ pratinjauBerkas("pasFotoFile", "pasFotoPratinjauWadah"); });
+  el("fotoDaftar").addEventListener("change", function(){ pratinjauBerkas("fotoDaftar", "fotoDaftarPratinjau"); });
+  el("lapFotoFile").addEventListener("change", function(){ var f = berkasDipilih("lapFotoFile"); el("lapFotoNama").textContent = f ? ("Dipilih: " + (f.name || "foto")) : ""; });
+  el("lapKwitFotoFile").addEventListener("change", function(){ var f = berkasDipilih("lapKwitFotoFile"); el("lapKwitFotoNama").textContent = f ? ("Dipilih: " + (f.name || "foto")) : ""; });
   document.querySelectorAll("#tabbar button").forEach(function(b){
     b.addEventListener("click", async function(){
       tampilLayar(b.getAttribute("data-layar"));
@@ -1178,6 +3143,14 @@ function bindEvents(){
     if(t && t.getAttribute){
       var s = t.getAttribute("data-selesai-sop");
       if(s){ selesaikanSop(s); return; }
+      var b = t.getAttribute("data-bantu");
+      if(b){ bantuTulis(b); return; }
+      var bs = t.getAttribute("data-bantu-sop");
+      if(bs){ bantuTulis("sop", bs); return; }
+      var sc = t.getAttribute("data-simpan-catatan");
+      if(sc){ simpanCatatan(sc); return; }
+      var v = t.getAttribute("data-verifikasi-sop");
+      if(v){ verifikasiSop(v, t.getAttribute("data-verifikasi-email"), t.getAttribute("data-verifikasi-tanggal")); return; }
     }
   });
 }
@@ -1216,8 +3189,19 @@ window.__pegawai = {
   tampilLayar:tampilLayar, tampilDashboard:tampilDashboard, muatLayarAktif:muatLayarAktif,
   tampilPopup:tampilPopup, tutupPopup:tutupPopup, salinSql:salinSql,
   tampilKonfirmasi:tampilKonfirmasi, tampilPanel:tampilPanel,
-  apakahErrorSetup:apakahErrorSetup, fmtTanggal:fmtTanggal,
-  tampilkanKotakSetup:tampilkanKotakSetup, htmlSopCard:htmlSopCard
+  apakahErrorSetup:apakahErrorSetup, fmtTanggal:fmtTanggal, fmtJam:fmtJam,
+  namaPengecek:namaPengecek,
+  tampilkanKotakSetup:tampilkanKotakSetup, htmlSopCard:htmlSopCard,
+  muatLaporan:muatLaporan, kirimLaporanFoto:kirimLaporanFoto,
+  kirimKwitansi:kirimKwitansi, kompresFoto:kompresFoto,
+  unggahPasFoto:unggahPasFoto, simpanPasFotoDariGer:simpanPasFotoDariGer,
+  tampilkanGerPasFoto:tampilkanGerPasFoto, fotoUrl:fotoUrl,
+  htmlLaporanCard:htmlLaporanCard, statusLaporan:statusLaporan,
+  cobaSimpanPasFotoDaftar:cobaSimpanPasFotoDaftar, isiFotoProfil:isiFotoProfil,
+  muatPerluDicek:muatPerluDicek, verifikasiSop:verifikasiSop,
+  muatPresensi:muatPresensi, tampilPresensi:tampilPresensi,
+  catatPresensi:catatPresensi, simpanCatatan:simpanCatatan,
+  bantuTulis:bantuTulis
 };
 </script>
 </body>
