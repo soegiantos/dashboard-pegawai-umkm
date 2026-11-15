@@ -3367,7 +3367,7 @@ else { init(); }
    pindah panel masuk/daftar (ID_NAVIGASI di bawah). */
 (function(){
   var KUNCI_TOMBOL = "pegawai-tombol-diklik:v1";
-  var ID_NAVIGASI = ["btnKeDaftar","btnBatalDaftar","btnKeMasukDariKonfirmasi","btnKeLupa","btnBatalLupa"];
+  var ID_NAVIGASI = [];
   function bacaSet(){ try{ var s = localStorage.getItem(KUNCI_TOMBOL); if(!s) return {}; var o = JSON.parse(s); return (o && typeof o === "object") ? o : {}; }catch(e){ return {}; } }
   function simpanSet(o){ try{ localStorage.setItem(KUNCI_TOMBOL, JSON.stringify(o)); }catch(e){} }
   function bolehDitandai(el){
@@ -3375,7 +3375,6 @@ else { init(); }
     if(el.hasAttribute("aria-pressed")) return false;
     if(el.tagName === "BUTTON" && el.type === "submit") return false;
     if(el.closest && el.closest("nav.tabbar")) return true;
-    if(el.hasAttribute("data-bantu") || el.hasAttribute("data-bantu-sop")) return true;
     if(el.id && ID_NAVIGASI.indexOf(el.id) >= 0) return true;
     return false;
   }
@@ -3384,8 +3383,6 @@ else { init(); }
     if(el.id) return "id:" + el.id;
     var v;
     if((v = el.getAttribute("data-layar"))) return "tab:" + v;
-    if((v = el.getAttribute("data-bantu-sop"))) return "bantu-sop:" + v;
-    if((v = el.getAttribute("data-bantu"))) return "bantu:" + v;
     return null;
   }
   function terapkanDariSimpanan(){
