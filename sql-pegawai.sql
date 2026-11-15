@@ -597,84 +597,108 @@ insert into storage.buckets (id, name, public)
 values ('bukti-pegawai', 'bukti-pegawai', false)
 on conflict (id) do nothing;
 
-alter table storage.objects enable row level security;
-
--- Foto laporan — pegawai mengunggah hanya ke folder pemiliknya
--- sendiri, atas namanya sendiri (pemilik_id diambil dari baris
--- akses_pegawai pegawai itu; perbandingan sebagai teks supaya jalur
--- yang bukan UUID — misal awalan pasfoto/ — sekadar tidak cocok,
--- bukan galat).
-drop policy if exists "bukti pegawai laporan unggah sendiri" on storage.objects;
-create policy "bukti pegawai laporan unggah sendiri" on storage.objects
-  for insert to authenticated
-  with check (
-    bucket_id = 'bukti-pegawai'
-    and (storage.foldername(name))[2] = auth.jwt() ->> 'email'
-    and (storage.foldername(name))[1] = (
-      select a.pemilik_id::text from public.akses_pegawai a
-      where a.email = auth.jwt() ->> 'email' and a.aktif
-      limit 1
-    )
-  );
-
--- Foto laporan — pegawai membaca hanya fotonya sendiri.
-drop policy if exists "bukti pegawai laporan baca sendiri" on storage.objects;
-create policy "bukti pegawai laporan baca sendiri" on storage.objects
-  for select using (
-    bucket_id = 'bukti-pegawai'
-    and (storage.foldername(name))[2] = auth.jwt() ->> 'email'
-    and (storage.foldername(name))[1] = (
-      select a.pemilik_id::text from public.akses_pegawai a
-      where a.email = auth.jwt() ->> 'email' and a.aktif
-      limit 1
-    )
-  );
-
--- Pas foto — pegawai mengunggah hanya pas fotonya sendiri.
-drop policy if exists "bukti pegawai pasfoto unggah sendiri" on storage.objects;
-create policy "bukti pegawai pasfoto unggah sendiri" on storage.objects
-  for insert to authenticated
-  with check (
-    bucket_id = 'bukti-pegawai'
-    and (storage.foldername(name))[1] = 'pasfoto'
-    and (storage.foldername(name))[3] = auth.jwt() ->> 'email'
-    and (storage.foldername(name))[2] = (
-      select a.pemilik_id::text from public.akses_pegawai a
-      where a.email = auth.jwt() ->> 'email' and a.aktif
-      limit 1
-    )
-  );
-
--- Pas foto — pegawai membaca hanya pas fotonya sendiri (TIDAK pernah
--- pas foto pegawai lain).
-drop policy if exists "bukti pegawai pasfoto baca sendiri" on storage.objects;
-create policy "bukti pegawai pasfoto baca sendiri" on storage.objects
-  for select using (
-    bucket_id = 'bukti-pegawai'
-    and (storage.foldername(name))[1] = 'pasfoto'
-    and (storage.foldername(name))[3] = auth.jwt() ->> 'email'
-    and (storage.foldername(name))[2] = (
-      select a.pemilik_id::text from public.akses_pegawai a
-      where a.email = auth.jwt() ->> 'email' and a.aktif
-      limit 1
-    )
-  );
-
--- Semua foto — pemilik usaha membaca hanya foto pegawai usahanya
--- sendiri (foto laporan di folder pemilik_id-nya, pas foto di folder
--- pasfoto/pemilik_id-nya).
-drop policy if exists "bukti pegawai pemilik baca tim" on storage.objects;
-create policy "bukti pegawai pemilik baca tim" on storage.objects
-  for select using (
-    bucket_id = 'bukti-pegawai'
-    and (
-      (storage.foldername(name))[1] = auth.uid()::text
-      or ((storage.foldername(name))[1] = 'pasfoto'
-          and (storage.foldername(name))[2] = auth.uid()::text)
-    )
-  );
-
+-- CATATAN — KEBIJAKAN STORAGE TIDAK DIJALANKAN LEWAT SQL EDITOR
 -- ============================================================================
+-- Perintah ALTER di bawah (baris asli) dan 5 kebijakan (policy) di
+-- storage.objects TIDAK bisa dijalankan lewat Dashboard SQL Editor:
+-- tabel storage.objects dimiliki oleh supabase_storage_admin, bukan
+-- oleh peran SQL Editor, sehingga ALTER / CREATE POLICY gagal dengan
+-- galat 42501 ("must be owner of table objects"). RLS di
+-- storage.objects SUDAH aktif (terverifikasi), jadi ALTER itu juga
+-- sudah tidak diperlukan.
+-- Kebijakan-kebijakan ini diterapkan lewat Dashboard Storage ->
+-- Policies (bucket bukti-pegawai) — cara resmi Supabase untuk
+-- kebijakan storage. Definisi lengkap kelimanya disimpan di bawah
+-- ini (dikomentari) supaya berkas ini tetap menjadi spesifikasi
+-- lengkap penyiapannya. Bila suatu saat ada koneksi dengan peran
+-- pemilik storage (mis. psql sebagai superuser), hapus awalan "--"
+-- dari kelima pernyataan CREATE POLICY di bawah dan jalankan.
+--   1. "bukti pegawai laporan unggah sendiri" — INSERT, pegawai mengunggah foto laporan ke folder pemiliknya sendiri
+--   2. "bukti pegawai laporan baca sendiri" — SELECT, pegawai membaca hanya fotonya sendiri
+--   3. "bukti pegawai pasfoto unggah sendiri" — INSERT, pegawai mengunggah hanya pas fotonya sendiri
+--   4. "bukti pegawai pasfoto baca sendiri" — SELECT, pegawai membaca hanya pas fotonya sendiri
+--   5. "bukti pegawai pemilik baca tim" — SELECT, pemilik membaca hanya foto pegawai usahanya sendiri
+--
+-- Pernyataan asli bagian ini (dikomentari — JANGAN hapus awalan "--"
+-- bila menjalankannya lewat SQL Editor):
+-- alter table storage.objects enable row level security;
+--
+-- -- Foto laporan — pegawai mengunggah hanya ke folder pemiliknya
+-- -- sendiri, atas namanya sendiri (pemilik_id diambil dari baris
+-- -- akses_pegawai pegawai itu; perbandingan sebagai teks supaya jalur
+-- -- yang bukan UUID — misal awalan pasfoto/ — sekadar tidak cocok,
+-- -- bukan galat).
+-- drop policy if exists "bukti pegawai laporan unggah sendiri" on storage.objects;
+-- create policy "bukti pegawai laporan unggah sendiri" on storage.objects
+--   for insert to authenticated
+--   with check (
+--     bucket_id = 'bukti-pegawai'
+--     and (storage.foldername(name))[2] = auth.jwt() ->> 'email'
+--     and (storage.foldername(name))[1] = (
+--       select a.pemilik_id::text from public.akses_pegawai a
+--       where a.email = auth.jwt() ->> 'email' and a.aktif
+--       limit 1
+--     )
+--   );
+--
+-- -- Foto laporan — pegawai membaca hanya fotonya sendiri.
+-- drop policy if exists "bukti pegawai laporan baca sendiri" on storage.objects;
+-- create policy "bukti pegawai laporan baca sendiri" on storage.objects
+--   for select using (
+--     bucket_id = 'bukti-pegawai'
+--     and (storage.foldername(name))[2] = auth.jwt() ->> 'email'
+--     and (storage.foldername(name))[1] = (
+--       select a.pemilik_id::text from public.akses_pegawai a
+--       where a.email = auth.jwt() ->> 'email' and a.aktif
+--       limit 1
+--     )
+--   );
+--
+-- -- Pas foto — pegawai mengunggah hanya pas fotonya sendiri.
+-- drop policy if exists "bukti pegawai pasfoto unggah sendiri" on storage.objects;
+-- create policy "bukti pegawai pasfoto unggah sendiri" on storage.objects
+--   for insert to authenticated
+--   with check (
+--     bucket_id = 'bukti-pegawai'
+--     and (storage.foldername(name))[1] = 'pasfoto'
+--     and (storage.foldername(name))[3] = auth.jwt() ->> 'email'
+--     and (storage.foldername(name))[2] = (
+--       select a.pemilik_id::text from public.akses_pegawai a
+--       where a.email = auth.jwt() ->> 'email' and a.aktif
+--       limit 1
+--     )
+--   );
+--
+-- -- Pas foto — pegawai membaca hanya pas fotonya sendiri (TIDAK pernah
+-- -- pas foto pegawai lain).
+-- drop policy if exists "bukti pegawai pasfoto baca sendiri" on storage.objects;
+-- create policy "bukti pegawai pasfoto baca sendiri" on storage.objects
+--   for select using (
+--     bucket_id = 'bukti-pegawai'
+--     and (storage.foldername(name))[1] = 'pasfoto'
+--     and (storage.foldername(name))[3] = auth.jwt() ->> 'email'
+--     and (storage.foldername(name))[2] = (
+--       select a.pemilik_id::text from public.akses_pegawai a
+--       where a.email = auth.jwt() ->> 'email' and a.aktif
+--       limit 1
+--     )
+--   );
+--
+-- -- Semua foto — pemilik usaha membaca hanya foto pegawai usahanya
+-- -- sendiri (foto laporan di folder pemilik_id-nya, pas foto di folder
+-- -- pasfoto/pemilik_id-nya).
+-- drop policy if exists "bukti pegawai pemilik baca tim" on storage.objects;
+-- create policy "bukti pegawai pemilik baca tim" on storage.objects
+--   for select using (
+--     bucket_id = 'bukti-pegawai'
+--     and (
+--       (storage.foldername(name))[1] = auth.uid()::text
+--       or ((storage.foldername(name))[1] = 'pasfoto'
+--           and (storage.foldername(name))[2] = auth.uid()::text)
+--     )
+--   );
+--
+-- -- ============================================================================
 -- 9. RPC LAPORAN + PAS FOTO
 -- ============================================================================
 -- Mengirim satu laporan (foto kegiatan atau kwitansi) dari pegawai
