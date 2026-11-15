@@ -1,0 +1,1225 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aplikasi Pegawai — UMKM Tumbuh</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/dist/umd/supabase.js" integrity="sha384-uteMfOloLDGt042uDz+xHGF3ym63/WQ6rFq7murQRG8Ih7QrXGEGNtWd8688sb4O" crossorigin="anonymous"></script>
+<style>
+:root{--gold:#e3b959;--gold-soft:#f3d68a;--bg:#12100c;--surface:#1d1a14;--surface2:#26221a;--line:#3a3325;--ink:#f2ead8;--ink-soft:#c9bfa5;--ink-mut:#9a8f74;--ok:#7fc98a;--warn:#e0a35a}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;line-height:1.55;min-height:100vh}
+a{color:var(--gold)}
+.wrap{max-width:900px;margin:0 auto;padding:18px 14px 60px}
+header.app-head{text-align:center;padding:26px 10px 8px}
+header.app-head h1{font-size:1.5rem;color:var(--gold);letter-spacing:.3px}
+header.app-head .sub{color:var(--ink-soft);font-size:.95rem;margin-top:6px}
+header.app-head .lab{color:var(--ink-mut);font-size:.85rem;margin-top:10px;line-height:1.5}
+.gold-rule{height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:16px auto 4px;max-width:520px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:14px}
+.card h2{font-size:1.15rem;color:var(--gold);margin-bottom:8px}
+.card h3{font-size:1rem;color:var(--gold-soft);margin:14px 0 6px}
+.card p{color:var(--ink-soft);font-size:.95rem}
+.muted{color:var(--ink-mut);font-size:.88rem}
+label{display:block;font-size:.92rem;color:var(--ink-soft);margin:12px 0 4px}
+input[type=email],input[type=password],input[type=text],select,textarea{width:100%;background:#14110c;border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:11px 12px;font-size:1rem}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--gold);outline-offset:1px}
+textarea{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.82rem;min-height:220px;resize:vertical}
+button{cursor:pointer;font-size:1rem;border-radius:10px;padding:11px 18px;border:1px solid var(--gold);background:var(--gold);color:#1a1405;font-weight:600}
+button.ghost{background:transparent;color:var(--gold)}
+button.kecil{padding:7px 12px;font-size:.9rem}
+button:disabled{opacity:.55;cursor:default}
+.linkbtn{background:none;border:none;color:var(--gold);text-decoration:underline;padding:6px 2px;font-size:.95rem}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.row>*{flex:1 1 auto}
+nav.tabbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+nav.tabbar button{flex:1 1 150px;background:var(--surface);color:var(--ink-soft);border:1px solid var(--line);padding:11px 8px;font-size:.93rem}
+nav.tabbar button.aktif{background:var(--gold);color:#1a1405;border-color:var(--gold)}
+.layar{display:none}
+.layar.aktif{display:block}
+.belum-cukup{background:var(--surface2);border:1px dashed var(--gold);border-radius:12px;padding:18px;text-align:center;margin-top:14px}
+.belum-cukup p{color:var(--ink-soft)}
+.warn-box{background:var(--surface2);border:1px solid var(--warn);border-radius:12px;padding:14px;margin-top:14px}
+.warn-box p{color:var(--ink-soft)}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px}
+.topbar .siapa{color:var(--ink-soft);font-size:.9rem}
+.peran-chip{display:inline-block;background:var(--surface2);border:1px solid var(--gold);border-radius:999px;padding:6px 14px;margin:6px 6px 0 0;font-size:.95rem;color:var(--gold-soft)}
+.sop-card{background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:16px;margin-top:14px}
+.sop-card h3{color:var(--gold);font-size:1.08rem;margin-bottom:4px}
+.sop-card .meta{color:var(--ink-soft);font-size:.92rem}
+.sop-card .tujuan{color:var(--ink-soft);font-size:.95rem;margin-top:6px}
+.sop-card .kemajuan{color:var(--gold-soft);font-weight:700;margin-top:10px;font-size:.95rem}
+.sop-card .kemajuan.selesai{color:var(--ok)}
+.langkah{display:flex;gap:10px;align-items:flex-start;padding:10px 4px;border-top:1px solid var(--line);cursor:pointer}
+.langkah:first-of-type{margin-top:10px}
+.langkah input[type=checkbox]{width:22px;height:22px;flex:0 0 22px;margin-top:2px;accent-color:var(--gold);cursor:pointer}
+.langkah .teks{flex:1;color:var(--ink)}
+.langkah input[type=checkbox]:checked + .teks{color:var(--ink-mut);text-decoration:line-through}
+.popup-overlay{position:fixed;inset:0;z-index:260;background:rgba(0,0,0,.74);display:none;align-items:center;justify-content:center;padding:20px 14px}
+.popup-overlay.show{display:flex}
+.popup-card{max-width:440px;width:100%;background:var(--surface);border:1.5px solid var(--gold);border-radius:16px;padding:22px;box-shadow:0 12px 40px rgba(0,0,0,.5)}
+.popup-card h3{font-size:1.18rem;color:var(--gold)}
+.popup-card p{margin-top:10px;color:var(--ink-soft);font-size:.97rem;line-height:1.55;white-space:pre-line}
+.popup-card .aksi{margin-top:16px;text-align:right}
+.footnote{margin-top:26px;text-align:center;color:var(--ink-mut);font-size:.83rem;line-height:1.6}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="app-head">
+    <h1>Aplikasi Pegawai</h1>
+    <p class="sub">UMKM Tumbuh — jalankan SOP usaha Anda setiap hari, langkah demi langkah</p>
+    <div class="gold-rule"></div>
+    <p class="lab">Dr. Ir. Soegianto Soelistiono, M.Si.<br>Lab Sistem Cerdas Fisika, FST Universitas Airlangga</p>
+  </header>
+
+  <!-- ============ LAYAR MASUK ============ -->
+  <section id="layarMasuk">
+    <div class="card" id="panelMasuk">
+      <h2>Masuk Aplikasi Pegawai</h2>
+      <p>Aplikasi ini hanya untuk pegawai yang sudah didaftarkan oleh pemilik usaha. Anda hanya melihat SOP usaha pemilik dan daftar centang harian Anda — tidak ada data keuangan usaha di aplikasi ini.</p>
+      <label for="emailMasuk">Email</label>
+      <input type="email" id="emailMasuk" autocomplete="email" placeholder="contoh: nama@contoh.id">
+      <label for="sandiMasuk">Kata sandi</label>
+      <input type="password" id="sandiMasuk" autocomplete="current-password" placeholder="Kata sandi Anda">
+      <div class="row" style="margin-top:16px">
+        <button id="btnMasuk" type="button">Masuk</button>
+        <button id="btnKeDaftar" type="button" class="ghost">Daftar akun baru</button>
+      </div>
+      <p style="margin-top:12px"><button id="btnKeLupa" type="button" class="linkbtn">Lupa kata sandi?</button></p>
+      <p class="muted" style="margin-top:10px">Kata sandi ini khusus untuk aplikasi ini, bukan kata sandi email Anda.</p>
+    </div>
+
+    <div class="card hidden" id="panelDaftar">
+      <h2>Daftar akun baru</h2>
+      <p>Gunakan <b>email Anda yang masih aktif</b> — tautan konfirmasi dikirim ke email itu, dan Anda harus mengetuk tautannya sebelum bisa masuk pertama kali. Pendaftaran saja belum memberi akses: pemilik usaha harus mendaftarkan Anda dulu sebagai pegawai (nama, email, dan peran Anda) di aplikasi utama.</p>
+      <label for="emailDaftar">Email (yang masih aktif)</label>
+      <input type="email" id="emailDaftar" autocomplete="email" placeholder="contoh: nama@contoh.id">
+      <label for="sandiDaftar">Kata sandi (minimal 6 karakter)</label>
+      <input type="password" id="sandiDaftar" autocomplete="new-password" placeholder="Buat kata sandi">
+      <div class="row" style="margin-top:16px">
+        <button id="btnDaftar" type="button">Daftar</button>
+        <button id="btnBatalDaftar" type="button" class="ghost">Kembali masuk</button>
+      </div>
+      <p class="muted" style="margin-top:10px">Kata sandi ini khusus untuk aplikasi ini, bukan kata sandi email Anda.</p>
+    </div>
+
+    <div class="card hidden" id="panelKonfirmasi">
+      <h2>Periksa email Anda</h2>
+      <p id="teksKonfirmasi">Kami sudah mengirim tautan konfirmasi ke email Anda.</p>
+      <p style="margin-top:8px">Buka email itu dan ketuk tautannya, lalu masuk di sini. Bila tautan belum sampai, periksa folder spam, atau kirim ulang di bawah ini.</p>
+      <div class="row" style="margin-top:16px">
+        <button id="btnKirimUlang" type="button">Kirim ulang tautan</button>
+        <button id="btnKeMasukDariKonfirmasi" type="button" class="ghost">Kembali masuk</button>
+      </div>
+    </div>
+
+    <div class="card hidden" id="panelLupa">
+      <h2>Lupa kata sandi?</h2>
+      <p>Masukkan email akun Anda. Kami akan mengirim tautan untuk membuat kata sandi baru.</p>
+      <label for="emailLupa">Email</label>
+      <input type="email" id="emailLupa" autocomplete="email" placeholder="contoh: nama@contoh.id">
+      <div class="row" style="margin-top:16px">
+        <button id="btnKirimLupa" type="button">Kirim tautan</button>
+        <button id="btnBatalLupa" type="button" class="ghost">Kembali masuk</button>
+      </div>
+    </div>
+
+    <div class="card hidden" id="panelSandiBaru">
+      <h2>Buat kata sandi baru</h2>
+      <p>Masukkan kata sandi baru untuk akun Anda, lalu ketik ulang untuk memastikan.</p>
+      <label for="sandiBaru">Kata sandi baru (minimal 6 karakter)</label>
+      <input type="password" id="sandiBaru" autocomplete="new-password" placeholder="Buat kata sandi baru">
+      <label for="sandiBaru2">Ulangi kata sandi baru</label>
+      <input type="password" id="sandiBaru2" autocomplete="new-password" placeholder="Ketik ulang kata sandi baru">
+      <div class="row" style="margin-top:16px">
+        <button id="btnSimpanSandi" type="button">Simpan kata sandi baru</button>
+      </div>
+      <p class="muted" style="margin-top:10px">Kata sandi ini khusus untuk aplikasi ini, bukan kata sandi email Anda.</p>
+    </div>
+  </section>
+
+  <!-- ============ DASHBOARD ============ -->
+  <section id="layarDashboard" class="hidden">
+    <div class="topbar">
+      <p class="siapa" id="infoPeran"></p>
+      <button id="btnKeluar" type="button" class="ghost kecil">Keluar</button>
+    </div>
+
+    <div class="card">
+      <p>Anda hanya melihat SOP usaha <b id="namaUsahaAtas">pemilik</b> dan daftar centang harian Anda. Tidak ada data keuangan usaha di aplikasi ini.</p>
+    </div>
+
+    <div class="card hidden" id="kotakSetup">
+      <h2>Pengaturan cloud</h2>
+      <p>Pengaturan cloud untuk aplikasi ini belum dijalankan. Salin seluruh teks di bawah ini, tempel di SQL Editor cloud, lalu klik Run. Setelah itu muat ulang halaman ini.</p>
+      <label for="sqlText">SQL pengaturan Aplikasi Pegawai</label>
+      <textarea id="sqlText" readonly></textarea>
+      <div class="row" style="margin-top:12px">
+        <button id="btnSalinSql" type="button">Salin SQL</button>
+      </div>
+    </div>
+
+    <nav class="tabbar" id="tabbar">
+      <button type="button" data-layar="sop" class="aktif">SOP Saya</button>
+      <button type="button" data-layar="peran">Peran Saya</button>
+      <button type="button" data-layar="profil">Profil</button>
+    </nav>
+
+    <section class="layar aktif" id="layarSop">
+      <div class="card">
+        <h2>SOP Saya</h2>
+        <p class="muted" id="sopTanggal">Daftar centang hari ini.</p>
+        <div id="sopIsi"><p class="muted">Memuat SOP…</p></div>
+      </div>
+    </section>
+
+    <section class="layar" id="layarPeran">
+      <div class="card">
+        <h2>Peran Saya</h2>
+        <p>Peran yang sudah Anda latih di usaha ini, seperti yang dicatat pemilik usaha. Bila peran Anda berubah, beri tahu pemilik usaha supaya catatannya diperbarui.</p>
+        <div id="peranIsi"><p class="muted">Memuat peran…</p></div>
+        <h3>SOP yang saya pimpin</h3>
+        <p class="muted">SOP yang penanggung jawabnya adalah nama Anda — SOP yang Anda pimpin jalannya setiap hari.</p>
+        <div id="peranSopIsi"><p class="muted">Memuat SOP…</p></div>
+      </div>
+    </section>
+
+    <section class="layar" id="layarProfil">
+      <div class="card">
+        <h2>Profil</h2>
+        <div id="profilIsi"><p class="muted">Memuat profil…</p></div>
+        <div class="row" style="margin-top:16px">
+          <button id="btnKeluarProfil" type="button" class="ghost">Keluar dari aplikasi</button>
+        </div>
+      </div>
+    </section>
+  </section>
+
+  <p class="footnote">Aplikasi Pegawai — UMKM Tumbuh<br>Dr. Ir. Soegianto Soelistiono, M.Si. — Lab Sistem Cerdas Fisika, FST Universitas Airlangga<br>Hanya SOP dan daftar centang harian. Tidak ada data keuangan usaha di aplikasi ini.</p>
+</div>
+
+<!-- Popup ramah -->
+<div class="popup-overlay" id="popupOverlay" role="dialog" aria-modal="true" aria-labelledby="popupJudul">
+  <div class="popup-card">
+    <h3 id="popupJudul"></h3>
+    <p id="popupIsi"></p>
+    <div class="aksi"><button id="btnPopupTutup" type="button">Mengerti</button></div>
+  </div>
+</div>
+
+<script>
+"use strict";
+var PEGAWAI_URL = "https://dashboard-pegawai-umkm.vercel.app/";
+var EMAIL_PEMILIK = "soegianto@fst.unair.ac.id";
+var CLOUD_URL = "https://bdnqsxwypbrdiwaxydoh.supabase.co";
+var CLOUD_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJkbnFzeHd5cGJyZGl3YXh5ZG9oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ1OTQ3NDUsImV4cCI6MjExMDE3MDc0NX0.MsdIzw-CAqJiBp3McXZ-6XLzLakmo0S5w7RhHHXMCQc";
+var LABEL_PERAN = {kas:"Kas", produksi:"Produksi & layanan", stok:"Stok"};
+/* SQL pengaturan cloud (salinan sql-pegawai.sql; ditampilkan di
+   dashboard bila tabel/RPC belum ada di cloud). */
+var SQL_TEXT =
+[
+"-- ============================================================================",
+"-- SQL APLIKASI PEGAWAI — APLIKASI INTROSPEKSI UMKM",
+"-- ============================================================================",
+"-- Proyek cloud : aplikasi-introspeksi-umkm",
+"-- Ref          : bdnqsxwypbrdiwaxydoh",
+"--",
+"-- TUJUAN FILE",
+"-- Membuat 2 tabel + 5 fungsi untuk aplikasi pegawai terpisah",
+"-- (dashboard-pegawai-umkm, \"Aplikasi Pegawai — UMKM Tumbuh\"): pegawai",
+"-- menjalankan SOP usaha pemiliknya sebagai daftar centang harian.",
+"-- Aplikasi ini TIDAK menampilkan data keuangan usaha apa pun — tidak",
+"-- ada angka usaha, rincian pencatatan, atau lokasi di hasil RPC di",
+"-- bawah. Yang dikembalikan hanya daftar SOP (nama, penanggung jawab,",
+"-- tujuan, langkah), nama usaha, dan catatan jalankan hari ini.",
+"--",
+"-- CARA MENJALANKAN",
+"-- 1. Buka Dashboard proyek di atas -> SQL Editor -> New query.",
+"-- 2. Tempel SELURUH isi file ini, lalu klik \"Run\".",
+"-- 3. File ini idempotent (aman dijalankan ulang).",
+"--",
+"-- PRASYARAT",
+"-- Tabel umkm_data (user_id uuid, data jsonb) dan profiles (id uuid,",
+"-- nama_usaha text) SUDAH ada dari sql utama aplikasi. Daftar SOP",
+"-- dibaca dari umkm_data.data -> 'sops' (daftar SOP yang disimpan",
+"-- aplikasi utama; tiap SOP berisi id, nama, pj, tujuan, steps[],",
+"-- dibuat). Nama usaha dibaca dari umkm_data.data -> 'inputs' ->>",
+"-- 'inNama', dengan cadangan profiles.nama_usaha.",
+"--",
+"-- PERINGATAN — FILE INI TIDAK MENGUBAH TABEL YANG SUDAH ADA",
+"-- File ini hanya membuat 2 tabel BARU (akses_pegawai, sop_jalankan)",
+"-- dan 5 fungsi BARU. Tabel yang sudah ada TIDAK diubah strukturnya,",
+"-- TIDAK dihapus, dan data pengguna yang sudah ada TIDAK disentuh.",
+"-- Tidak ada baris data yang disisipkan oleh file ini — pemilik",
+"-- menambahkan pegawai lewat daftar tim di aplikasi utama, setelah",
+"-- file ini jalan. Pegawai mendaftar sendiri dengan email + kata",
+"-- sandinya sendiri; pemilik TIDAK PERNAH membuat akun untuk pegawai.",
+"--",
+"-- TEMUAN KOLOM (diperiksa dari berkas aplikasi sebelum file ini",
+"-- ditulis — TIDAK ADA kolom yang diasumsikan):",
+"--   * umkm_data:       user_id uuid, data jsonb, updated_at saja",
+"--     (tanpa created_at). Daftar SOP: data -> 'sops' (array jsonb;",
+"--     tiap entri {id, nama, pj, tujuan, steps[], dibuat}).",
+"--     Nama usaha: data -> 'inputs' ->> 'inNama'.",
+"--   * profiles:        id uuid, nama_usaha text, no_hp text,",
+"--     kode_marketing text, created_at timestamptz.",
+"--   * auth.users:      email varchar(255), created_at. Email yang",
+"--     dikembalikan RPC di-cast ke ::text.",
+"-- ============================================================================",
+"",
+"-- ============================================================================",
+"-- 1. TABEL akses_pegawai — siapa saja pegawai yang boleh masuk",
+"-- ============================================================================",
+"-- Satu baris = satu pegawai dari satu usaha. Pemilik usaha (pemilik_id)",
+"-- menambahkan pegawai lewat daftar tim di aplikasi utama: email, nama,",
+"-- dan peran yang sudah dilatih (kas / produksi / stok). Pegawai",
+"-- mendaftar sendiri di aplikasi pegawai dengan email yang sama.",
+"create table if not exists public.akses_pegawai (",
+"  email text not null primary key,",
+"  pemilik_id uuid not null,",
+"  nama text not null,",
+"  peran text[] not null default '{}'::text[],",
+"  aktif boolean not null default true,",
+"  created_at timestamptz not null default now(),",
+"  constraint akses_pegawai_peran_valid",
+"    check (peran <@ array['kas','produksi','stok']::text[])",
+");",
+"comment on table public.akses_pegawai is 'Daftar pegawai yang diizinkan masuk Aplikasi Pegawai, beserta peran yang sudah dilatih tiap orang (kas / produksi / stok). Satu baris = satu pegawai. Pemilik menambahkan pegawai lewat daftar tim di aplikasi utama.';",
+"comment on column public.akses_pegawai.pemilik_id is 'ID akun pemilik usaha (auth.users.id) yang mempekerjakan pegawai ini.';",
+"comment on column public.akses_pegawai.peran is 'Peran yang sudah dilatih pegawai ini: kas, produksi, dan/atau stok.';",
+"",
+"alter table public.akses_pegawai enable row level security;",
+"",
+"-- Membaca: setiap orang boleh membaca barisnya sendiri.",
+"drop policy if exists \"akses pegawai baca sendiri\" on public.akses_pegawai;",
+"create policy \"akses pegawai baca sendiri\" on public.akses_pegawai",
+"  for select using (auth.jwt() ->> 'email' = email);",
+"",
+"-- Pemilik usaha boleh membaca, menambah, mengubah, dan menghapus",
+"-- baris pegawai usahanya sendiri saja.",
+"drop policy if exists \"akses pegawai pemilik semua\" on public.akses_pegawai;",
+"create policy \"akses pegawai pemilik semua\" on public.akses_pegawai",
+"  for all",
+"  using (auth.uid() = pemilik_id)",
+"  with check (auth.uid() = pemilik_id);",
+"",
+"-- ============================================================================",
+"-- 2. TABEL sop_jalankan — catatan harian jalankan SOP per pegawai",
+"-- ============================================================================",
+"-- Satu baris = satu SOP yang dijalankan satu pegawai pada satu hari.",
+"-- langkah_selesai = jumlah langkah yang sudah dicentang hari itu",
+"-- (0 sampai jumlah langkah SOP); selesai = true bila seluruh langkah",
+"-- sudah dicentang. Satu pegawai hanya punya satu baris per SOP per",
+"-- hari — centang berikutnya memperbarui baris yang sama.",
+"create table if not exists public.sop_jalankan (",
+"  id uuid not null primary key default gen_random_uuid(),",
+"  pegawai_email text not null,",
+"  pemilik_id uuid not null,",
+"  sop_id text not null,",
+"  tanggal date not null default current_date,",
+"  langkah_selesai int not null default 0,",
+"  selesai boolean not null default false,",
+"  created_at timestamptz not null default now(),",
+"  constraint sop_jalankan_langkah_tidak_negatif check (langkah_selesai >= 0),",
+"  constraint sop_jalankan_satu_baris_per_hari",
+"    unique (pegawai_email, sop_id, tanggal)",
+");",
+"comment on table public.sop_jalankan is 'Catatan harian jalankan SOP: satu baris per pegawai per SOP per hari. Pegawai mencatat berapa langkah yang sudah dicentang dan apakah SOP selesai hari itu.';",
+"comment on column public.sop_jalankan.langkah_selesai is 'Jumlah langkah SOP yang sudah dicentang pegawai hari itu (0 sampai jumlah langkah SOP).';",
+"comment on column public.sop_jalankan.selesai is 'Benar bila seluruh langkah SOP sudah dicentang hari itu.';",
+"",
+"alter table public.sop_jalankan enable row level security;",
+"",
+"-- Membaca: pegawai hanya membaca barisnya sendiri; pemilik usaha",
+"-- membaca baris pegawai usahanya sendiri.",
+"drop policy if exists \"sop jalankan baca sendiri\" on public.sop_jalankan;",
+"create policy \"sop jalankan baca sendiri\" on public.sop_jalankan",
+"  for select using (auth.jwt() ->> 'email' = pegawai_email);",
+"",
+"drop policy if exists \"sop jalankan baca pemilik\" on public.sop_jalankan;",
+"create policy \"sop jalankan baca pemilik\" on public.sop_jalankan",
+"  for select using (auth.uid() = pemilik_id);",
+"",
+"-- Menulis: pegawai hanya menulis baris atas namanya sendiri.",
+"drop policy if exists \"sop jalankan tulis sendiri\" on public.sop_jalankan;",
+"create policy \"sop jalankan tulis sendiri\" on public.sop_jalankan",
+"  for insert to authenticated",
+"  with check (auth.jwt() ->> 'email' = pegawai_email);",
+"",
+"drop policy if exists \"sop jalankan ubah sendiri\" on public.sop_jalankan;",
+"create policy \"sop jalankan ubah sendiri\" on public.sop_jalankan",
+"  for update to authenticated",
+"  using (auth.jwt() ->> 'email' = pegawai_email)",
+"  with check (auth.jwt() ->> 'email' = pegawai_email);",
+"",
+"-- Menghapus: hanya pemilik usaha, untuk baris pegawai usahanya.",
+"drop policy if exists \"sop jalankan hapus pemilik\" on public.sop_jalankan;",
+"create policy \"sop jalankan hapus pemilik\" on public.sop_jalankan",
+"  for delete using (auth.uid() = pemilik_id);",
+"",
+"-- ============================================================================",
+"-- 3. PEMERIKSA IZIN — dipakai di awal setiap RPC di bawah",
+"-- ============================================================================",
+"-- Benar bila pemanggil terdaftar aktif di akses_pegawai. Security",
+"-- definer supaya bisa membaca akses_pegawai walau RLS membatasi",
+"-- pembacaan langsung.",
+"create or replace function public.adalah_pegawai()",
+"returns boolean",
+"language sql security definer stable set search_path = public as $$",
+"  select exists (",
+"    select 1 from public.akses_pegawai a",
+"    where a.email = auth.jwt() ->> 'email' and a.aktif",
+"  )",
+"$$;",
+"comment on function public.adalah_pegawai() is 'Benar bila pemanggil terdaftar aktif di akses_pegawai. Dipakai di awal setiap RPC pegawai.';",
+"",
+"-- Berhenti dengan pesan bila pemanggil bukan pegawai aktif. Setiap RPC",
+"-- pegawai memanggil fungsi ini dulu; pemanggil yang bukan pegawai",
+"-- mendapat error (bukan data kosong yang bisa disalahartikan sebagai",
+"-- \"belum ada SOP\").",
+"create or replace function public.periksa_pegawai()",
+"returns void",
+"language plpgsql security definer set search_path = public as $$",
+"begin",
+"  if not public.adalah_pegawai() then",
+"    raise exception 'Hanya pegawai yang terdaftar oleh pemilik usaha yang boleh melihat data ini.';",
+"  end if;",
+"end;",
+"$$;",
+"comment on function public.periksa_pegawai() is 'Berhenti dengan pesan bila pemanggil bukan pegawai aktif. Dipanggil di awal setiap RPC pegawai.';",
+"",
+"-- Benar bila pemanggil adalah pemilik aplikasi (pemilik usaha).",
+"create or replace function public.adalah_pemilik_aplikasi()",
+"returns boolean",
+"language sql security definer stable set search_path = public as $$",
+"  select auth.jwt() ->> 'email' = 'soegianto@fst.unair.ac.id'",
+"$$;",
+"comment on function public.adalah_pemilik_aplikasi() is 'Benar bila pemanggil adalah pemilik aplikasi (soegianto@fst.unair.ac.id). Dipakai RPC ringkasan tim.';",
+"",
+"revoke execute on function public.adalah_pegawai() from public;",
+"grant execute on function public.adalah_pegawai() to authenticated;",
+"revoke execute on function public.periksa_pegawai() from public;",
+"grant execute on function public.periksa_pegawai() to authenticated;",
+"revoke execute on function public.adalah_pemilik_aplikasi() from public;",
+"grant execute on function public.adalah_pemilik_aplikasi() to authenticated;",
+"",
+"-- ============================================================================",
+"-- 4. RPC sops_untuk_pegawai() — SOP pemilik + catatan hari ini (satu objek JSON)",
+"-- ============================================================================",
+"-- Mengembalikan satu objek JSON (TANPA data keuangan apa pun):",
+"--   nama_usaha       : nama usaha pemilik (dari umkm_data.inputs.inNama,",
+"--     cadangan profiles.nama_usaha; null bila belum diisi)",
+"--   pegawai_nama     : nama pegawai pemanggil (dari akses_pegawai)",
+"--   peran            : peran yang sudah dilatih pegawai ini",
+"--     (array dari akses_pegawai: 'kas' / 'produksi' / 'stok')",
+"--   sops             : [{id, nama, pj, tujuan, steps[]}] — daftar SOP",
+"--     pemilik dari umkm_data.data -> 'sops'; steps adalah array langkah",
+"--     (string), urut seperti di aplikasi utama.",
+"--   jalankan_hari_ini: [{sop_id, langkah_selesai, selesai}] — catatan",
+"--     pegawai ini hari ini saja, supaya daftar centang tampil sama",
+"--     setelah halaman dimuat ulang.",
+"-- Hanya pegawai aktif. Pemilik usaha yang memanggil tanpa baris",
+"-- akses_pegawai mendapat error — pemilik memantau tim lewat aplikasi",
+"-- utama, bukan lewat aplikasi pegawai.",
+"create or replace function public.sops_untuk_pegawai()",
+"returns jsonb",
+"language plpgsql security definer set search_path = public as $$",
+"declare",
+"  v_email text := auth.jwt() ->> 'email';",
+"  v_pemilik_id uuid;",
+"  v_nama text;",
+"  v_peran text[];",
+"  v_nama_usaha text;",
+"  v_sops jsonb;",
+"  v_jalankan jsonb;",
+"begin",
+"  perform public.periksa_pegawai();",
+"",
+"  select a.pemilik_id, a.nama, a.peran",
+"    into v_pemilik_id, v_nama, v_peran",
+"  from public.akses_pegawai a",
+"  where a.email = v_email and a.aktif",
+"  limit 1;",
+"",
+"  -- Nama usaha + daftar SOP dari data usaha pemilik.",
+"  select",
+"    nullif(ud.data -> 'inputs' ->> 'inNama', ''),",
+"    coalesce(ud.data -> 'sops', '[]'::jsonb)",
+"    into v_nama_usaha, v_sops",
+"  from public.umkm_data ud",
+"  where ud.user_id = v_pemilik_id;",
+"",
+"  -- Cadangan nama usaha dari profiles bila data usaha belum diisi.",
+"  if v_nama_usaha is null then",
+"    select nullif(p.nama_usaha, '') into v_nama_usaha",
+"    from public.profiles p where p.id = v_pemilik_id;",
+"  end if;",
+"",
+"  -- Hanya SOP yang bentuknya benar yang dikembalikan (nama + steps).",
+"  select coalesce(",
+"    jsonb_agg(",
+"      jsonb_build_object(",
+"        'id', s ->> 'id',",
+"        'nama', s ->> 'nama',",
+"        'pj', s ->> 'pj',",
+"        'tujuan', s ->> 'tujuan',",
+"        'steps', coalesce(s -> 'steps', '[]'::jsonb)",
+"      ) order by (s ->> 'nama')",
+"    ),",
+"    '[]'::jsonb",
+"  ) into v_sops",
+"  from jsonb_array_elements(coalesce(v_sops, '[]'::jsonb)) as s",
+"  where s ->> 'nama' is not null and s ->> 'nama' <> ''",
+"    and jsonb_typeof(s -> 'steps') = 'array';",
+"",
+"  -- Catatan pegawai ini hari ini saja (untuk memulihkan centang).",
+"  select coalesce(",
+"    jsonb_agg(",
+"      jsonb_build_object(",
+"        'sop_id', j.sop_id,",
+"        'langkah_selesai', j.langkah_selesai,",
+"        'selesai', j.selesai",
+"      )",
+"    ),",
+"    '[]'::jsonb",
+"  ) into v_jalankan",
+"  from public.sop_jalankan j",
+"  where j.pegawai_email = v_email",
+"    and j.pemilik_id = v_pemilik_id",
+"    and j.tanggal = current_date;",
+"",
+"  return jsonb_build_object(",
+"    'nama_usaha', v_nama_usaha,",
+"    'pegawai_nama', v_nama,",
+"    'peran', coalesce(v_peran, '{}'::text[]),",
+"    'sops', coalesce(v_sops, '[]'::jsonb),",
+"    'jalankan_hari_ini', coalesce(v_jalankan, '[]'::jsonb)",
+"  );",
+"end;",
+"$$;",
+"comment on function public.sops_untuk_pegawai() is 'SOP usaha pemilik untuk pegawai yang masuk: nama usaha, nama + peran pegawai, daftar SOP (nama, penanggung jawab, tujuan, langkah), dan catatan jalankan pegawai itu hari ini (untuk memulihkan centang). Hanya pegawai aktif. Tanpa data keuangan.';",
+"",
+"revoke execute on function public.sops_untuk_pegawai() from public;",
+"grant execute on function public.sops_untuk_pegawai() to authenticated;",
+"",
+"-- ============================================================================",
+"-- 5. RPC catat_sop_jalankan(p_sop_id, p_langkah_selesai, p_selesai)",
+"--    — simpan / perbarui catatan harian satu SOP",
+"-- ============================================================================",
+"-- Menyimpan berapa langkah SOP yang sudah dicentang pegawai hari ini.",
+"-- Satu pegawai punya SATU baris per SOP per hari: bila belum ada baris",
+"-- hari ini, baris baru disisipkan; bila sudah ada, baris itu",
+"-- diperbarui (upsert pada pegawai_email + sop_id + tanggal hari ini).",
+"-- p_langkah_selesai dibatasi 0 sampai jumlah langkah SOP (bila SOP",
+"-- ditemukan di data usaha pemilik); p_selesai benar hanya bila",
+"-- seluruh langkah sudah dicentang.",
+"-- Mengembalikan satu objek JSON: {sop_id, tanggal, langkah_selesai,",
+"-- selesai}. Hanya pegawai aktif; pegawai hanya mencatat atas namanya",
+"-- sendiri (pegawai_email selalu diambil dari pemanggil, bukan dari",
+"-- argumen — argumen tidak bisa dipakai untuk mencatat atas nama orang",
+"-- lain).",
+"create or replace function public.catat_sop_jalankan(",
+"  p_sop_id text,",
+"  p_langkah_selesai int,",
+"  p_selesai boolean",
+")",
+"returns jsonb",
+"language plpgsql security definer set search_path = public as $$",
+"declare",
+"  v_email text := auth.jwt() ->> 'email';",
+"  v_pemilik_id uuid;",
+"  v_jumlah_langkah int;",
+"  v_langkah int;",
+"  v_selesai boolean;",
+"  v_tanggal date := current_date;",
+"begin",
+"  perform public.periksa_pegawai();",
+"",
+"  select a.pemilik_id into v_pemilik_id",
+"  from public.akses_pegawai a",
+"  where a.email = v_email and a.aktif",
+"  limit 1;",
+"",
+"  if p_sop_id is null or p_sop_id = '' then",
+"    raise exception 'SOP tidak dikenal.';",
+"  end if;",
+"",
+"  -- Jumlah langkah SOP (bila SOP ditemukan di data usaha pemilik).",
+"  select jsonb_array_length(s -> 'steps') into v_jumlah_langkah",
+"  from public.umkm_data ud,",
+"       jsonb_array_elements(coalesce(ud.data -> 'sops', '[]'::jsonb)) as s",
+"  where ud.user_id = v_pemilik_id",
+"    and s ->> 'id' = p_sop_id",
+"    and jsonb_typeof(s -> 'steps') = 'array'",
+"  limit 1;",
+"",
+"  v_langkah := greatest(coalesce(p_langkah_selesai, 0), 0);",
+"  if v_jumlah_langkah is not null then",
+"    v_langkah := least(v_langkah, v_jumlah_langkah);",
+"    v_selesai := (v_langkah >= v_jumlah_langkah and v_jumlah_langkah > 0);",
+"  else",
+"    v_selesai := coalesce(p_selesai, false);",
+"  end if;",
+"",
+"  insert into public.sop_jalankan",
+"    (pegawai_email, pemilik_id, sop_id, tanggal, langkah_selesai, selesai)",
+"  values (v_email, v_pemilik_id, p_sop_id, v_tanggal, v_langkah, v_selesai)",
+"  on conflict (pegawai_email, sop_id, tanggal)",
+"  do update set langkah_selesai = excluded.langkah_selesai,",
+"                selesai = excluded.selesai;",
+"",
+"  return jsonb_build_object(",
+"    'sop_id', p_sop_id,",
+"    'tanggal', v_tanggal,",
+"    'langkah_selesai', v_langkah,",
+"    'selesai', v_selesai",
+"  );",
+"end;",
+"$$;",
+"comment on function public.catat_sop_jalankan(text, integer, boolean) is 'Simpan/perbarui catatan harian satu SOP untuk pegawai yang masuk: jumlah langkah yang sudah dicentang + apakah SOP selesai hari itu. Satu baris per pegawai per SOP per hari (upsert). Hanya pegawai aktif; pegawai hanya mencatat atas namanya sendiri.';",
+"",
+"revoke execute on function public.catat_sop_jalankan(text, integer, boolean) from public;",
+"grant execute on function public.catat_sop_jalankan(text, integer, boolean) to authenticated;",
+"",
+"-- ============================================================================",
+"-- 6. RPC ringkasan_tim_untuk_pemilik() — siapa menjalankan SOP apa, kapan",
+"-- ============================================================================",
+"-- Mengembalikan satu baris per catatan jalankan SOP pegawai usaha",
+"-- pemilik yang memanggil (paling baru dulu, maks 200 baris):",
+"--   pegawai_nama   : nama pegawai (dari akses_pegawai)",
+"--   pegawai_email  : email pegawai (di-cast ke ::text)",
+"--   sop_id         : id SOP di data usaha pemilik",
+"--   sop_nama       : nama SOP (dicari di umkm_data.data -> 'sops';",
+"--     null bila SOP sudah dihapus pemilik, sop_id tetap tampil)",
+"--   tanggal        : tanggal SOP dijalankan",
+"--   langkah_selesai: jumlah langkah yang dicentang hari itu",
+"--   selesai        : apakah SOP selesai hari itu",
+"--   dicatat_pada   : waktu baris pertama kali dicatat",
+"-- Hanya pemilik aplikasi yang boleh memanggil (pemilik usaha adalah",
+"-- pemilik aplikasi). Pemanggil lain mendapat error. Dipakai aplikasi",
+"-- utama (modul Orang & SOP) untuk tampilan \"Siapa menjalankan SOP\".",
+"create or replace function public.ringkasan_tim_untuk_pemilik()",
+"returns table(",
+"  pegawai_nama text,",
+"  pegawai_email text,",
+"  sop_id text,",
+"  sop_nama text,",
+"  tanggal date,",
+"  langkah_selesai int,",
+"  selesai boolean,",
+"  dicatat_pada timestamptz",
+")",
+"language plpgsql security definer set search_path = public as $$",
+"declare",
+"  v_pemilik_id uuid := auth.uid();",
+"begin",
+"  if not public.adalah_pemilik_aplikasi() then",
+"    raise exception 'Hanya pemilik aplikasi yang boleh melihat ringkasan tim.';",
+"  end if;",
+"",
+"  return query",
+"  select",
+"    a.nama::text as pegawai_nama,",
+"    j.pegawai_email::text as pegawai_email,",
+"    j.sop_id::text as sop_id,",
+"    (",
+"      select s ->> 'nama'",
+"      from public.umkm_data ud,",
+"           jsonb_array_elements(coalesce(ud.data -> 'sops', '[]'::jsonb)) as s",
+"      where ud.user_id = j.pemilik_id",
+"        and s ->> 'id' = j.sop_id",
+"      limit 1",
+"    )::text as sop_nama,",
+"    j.tanggal,",
+"    j.langkah_selesai,",
+"    j.selesai,",
+"    j.created_at as dicatat_pada",
+"  from public.sop_jalankan j",
+"  left join public.akses_pegawai a on a.email = j.pegawai_email",
+"  where j.pemilik_id = v_pemilik_id",
+"  order by j.tanggal desc, j.created_at desc",
+"  limit 200;",
+"end;",
+"$$;",
+"comment on function public.ringkasan_tim_untuk_pemilik() is 'Ringkasan tim untuk pemilik aplikasi: siapa (nama + email pegawai) menjalankan SOP apa (nama SOP), kapan, berapa langkah, dan apakah selesai. Hanya pemilik aplikasi. Maks 200 baris, paling baru dulu.';",
+"",
+"revoke execute on function public.ringkasan_tim_untuk_pemilik() from public;",
+"grant execute on function public.ringkasan_tim_untuk_pemilik() to authenticated;",
+"",
+"-- ============================================================================",
+"-- PENUTUP — DAFTAR VERIFIKASI SETELAH KLIK RUN",
+"-- ============================================================================",
+"-- Jalankan pemeriksaan berikut di SQL Editor yang sama (satu per satu):",
+"--",
+"-- 1. Kedua tabel masih kosong (pemilik menambahkan pegawai lewat",
+"--    aplikasi utama, setelah file ini jalan):",
+"--      select * from public.akses_pegawai;",
+"--      select * from public.sop_jalankan;",
+"--    Keduanya harus mengembalikan 0 baris.",
+"--",
+"-- 2. RLS aktif di kedua tabel:",
+"--      select tablename, rowsecurity from pg_tables",
+"--      where schemaname = 'public'",
+"--        and tablename in ('akses_pegawai', 'sop_jalankan');",
+"--    Kolom rowsecurity harus true di kedua baris.",
+"--",
+"-- 3. Pemanggil yang bukan pegawai mendapat error (bukan data):",
+"--      (masuk dengan akun lain lalu) select public.sops_untuk_pegawai();",
+"--    Harus gagal dengan pesan \"Hanya pegawai yang terdaftar oleh",
+"--    pemilik usaha yang boleh melihat data ini.\"",
+"--",
+"-- 4. Pemanggil yang bukan pemilik mendapat error di ringkasan tim:",
+"--      (masuk dengan akun lain lalu)",
+"--      select * from public.ringkasan_tim_untuk_pemilik();",
+"--    Harus gagal dengan pesan \"Hanya pemilik aplikasi yang boleh",
+"--    melihat ringkasan tim.\"",
+"--",
+"-- CATATAN:",
+"-- - Menambah pegawai (oleh pemilik, lewat daftar tim di aplikasi",
+"--   utama — atau lewat SQL bila perlu):",
+"--      insert into public.akses_pegawai (email, pemilik_id, nama, peran, aktif)",
+"--      values ('pegawai@contoh.id', auth.uid(), 'Nama Pegawai',",
+"--              array['kas','stok'], true);",
+"--   Pegawai lalu mendaftar sendiri di Aplikasi Pegawai dengan email",
+"--   yang sama + kata sandi buatannya sendiri.",
+"-- - Aplikasi pegawai HANYA memanggil ketiga RPC di atas + membaca",
+"--   tabel akses_pegawai langsung untuk memeriksa izin masuk.",
+"--   Aplikasi TIDAK membaca tabel pengguna atau data usaha langsung —",
+"--   semua lewat RPC yang memeriksa izin dan membatasi ke SOP pemilik",
+"--   + catatan pegawai itu sendiri.",
+"-- - Sampai file ini dijalankan, aplikasi menampilkan \"Fitur ini belum",
+"--   aktif — pengaturan cloud belum dijalankan\" beserta salinan SQL ini.",
+"-- ============================================================================"
+].join("\n")
+;
+</script>
+<script>
+"use strict";
+/* ===== Util ===== */
+function el(id){ return document.getElementById(id); }
+function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function fmtTanggal(t){
+  if(!t) return "—";
+  try{
+    var d = new Date(t);
+    if(isNaN(d.getTime())) return "—";
+    return d.toLocaleDateString("id-ID", {day:"numeric", month:"long", year:"numeric"});
+  }catch(e){ return "—"; }
+}
+function namaPeran(k){ return LABEL_PERAN[k] || k || "—"; }
+function tanggalHariIni(){
+  var d = new Date();
+  return d.toLocaleDateString("id-ID", {weekday:"long", day:"numeric", month:"long", year:"numeric"});
+}
+
+/* ===== State & client ===== */
+var S = { user:null, email:null, nama:null, peran:[], namaUsaha:null,
+  layar:"sop", sops:[], jalankan:{}, emailKonfirmasi:null };
+var __client = null;
+function getClient(){
+  if(__client) return __client;
+  if(window.supabase && window.supabase.createClient){
+    try{ __client = window.supabase.createClient(CLOUD_URL, CLOUD_ANON); }catch(e){ __client = null; }
+  }
+  return __client;
+}
+
+/* ===== Popup ramah ===== */
+function tampilPopup(judul, isi){
+  el("popupJudul").textContent = judul;
+  el("popupIsi").textContent = isi;
+  el("popupOverlay").classList.add("show");
+}
+function tutupPopup(){ el("popupOverlay").classList.remove("show"); }
+function pesanRamah(err){
+  var m = String((err && err.message) || err || "");
+  if(/hanya pegawai yang terdaftar/i.test(m)) return "Aplikasi ini hanya untuk pegawai yang terdaftar.\nHubungi pemilik usaha bila Anda merasa seharusnya bisa masuk.";
+  if(/hanya pemilik aplikasi/i.test(m)) return "Bagian ini hanya untuk pemilik aplikasi.";
+  if(/invalid login credentials|invalid email|invalid password/i.test(m)) return "Email atau kata sandi tidak cocok.\nPeriksa lagi ketikan Anda, lalu coba masuk kembali.";
+  if(/email not confirmed|not confirmed/i.test(m)) return "Email Anda belum dikonfirmasi.\nBuka email Anda dan ketuk tautan konfirmasi yang kami kirim, lalu masuk kembali.";
+  if(/too many requests|rate limit|email rate limit/i.test(m)) return "Terlalu banyak percobaan barusan.\nTunggu sebentar, lalu coba lagi.";
+  if(/network|failed to fetch|load failed/i.test(m)) return "Tidak bisa terhubung ke cloud.\nPeriksa koneksi internet Anda, lalu coba lagi.";
+  if(/user already registered|already registered/i.test(m)) return "Email ini sudah terdaftar.\nSilakan masuk, atau pakai \"Lupa kata sandi?\" bila Anda lupa kata sandinya.";
+  if(/password should be at least/i.test(m)) return "Kata sandi terlalu pendek.\nBuat kata sandi minimal 6 karakter.";
+  return "Terjadi kendala saat memproses permintaan Anda.\nCoba lagi sebentar lagi. Bila masih gagal, hubungi pemilik usaha.";
+}
+function apakahErrorSetup(err){
+  var m = String((err && err.message) || err || "") + " " + String((err && err.code) || "");
+  return /does not exist|relation .* does not|function .* does not|42P01|42883|PGRST202|table .* not found|column .* does not exist/i.test(m);
+}
+
+/* ===== Kotak SQL (pengaturan cloud belum jalan) ===== */
+function pesanSetupHtml(){ return '<div class="warn-box"><p><strong>Fitur ini belum aktif — pengaturan cloud belum dijalankan.</strong></p><p style="margin-top:6px">SOP belum bisa ditampilkan karena pengaturan cloud untuk aplikasi ini belum dijalankan. Salinan pengaturannya ada di bagian atas dashboard ini.</p></div>'; }
+function tampilkanKotakSetup(){
+  var box = el("kotakSetup");
+  if(!box) return;
+  var ta = el("sqlText");
+  if(ta && !ta.value) ta.value = SQL_TEXT;
+  box.classList.remove("hidden");
+}
+function salinSql(){
+  var ta = el("sqlText");
+  if(!ta) return false;
+  ta.value = SQL_TEXT;
+  try{
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(SQL_TEXT).then(function(){
+        tampilPopup("SQL tersalin","SQL pengaturan sudah tersalin.\nTempel di SQL Editor cloud lalu klik Run.");
+      }, function(){ tampilPopup("Salin manual","Tandai seluruh teks SQL, salin, lalu tempel di SQL Editor cloud."); });
+      return true;
+    }
+  }catch(e){}
+  try{ ta.select(); if(document.execCommand) document.execCommand("copy"); }catch(e){}
+  tampilPopup("SQL tersalin","SQL pengaturan sudah tersalin.\nTempel di SQL Editor cloud lalu klik Run.");
+  return true;
+}
+
+/* ===== Auth ===== */
+async function masuk(email, sandi){
+  email = String(email||"").trim(); sandi = String(sandi||"");
+  if(!email || !sandi){ tampilPopup("Belum lengkap","Isi email dan kata sandi Anda, lalu coba lagi."); return {ok:false}; }
+  var c = getClient();
+  if(!c){ tampilPopup("Fitur ini belum aktif","Fitur ini belum aktif — pengaturan cloud belum dijalankan. Coba lagi nanti."); return {ok:false, setup:true}; }
+  var r;
+  try{ r = await c.auth.signInWithPassword({email:email, password:sandi}); }
+  catch(e){ tampilPopup("Tidak bisa masuk", pesanRamah(e)); return {ok:false}; }
+  if(r.error){
+    if(/email not confirmed|not confirmed/i.test(String(r.error.message || ""))){
+      tampilKonfirmasi(email);
+      tampilPopup("Email belum dikonfirmasi","Email Anda belum dikonfirmasi.\nBuka email Anda dan ketuk tautan konfirmasi yang kami kirim, lalu masuk kembali.");
+      return {ok:false, belumKonfirmasi:true, error:r.error};
+    }
+    tampilPopup("Tidak bisa masuk", pesanRamah(r.error));
+    return {ok:false, error:r.error};
+  }
+  return await sesudahMasuk(r.data && r.data.user);
+}
+async function sesudahMasuk(u){
+  if(!u || !u.email){ tampilPopup("Tidak bisa masuk","Sesi masuk tidak lengkap. Coba masuk lagi."); return {ok:false}; }
+  var email = String(u.email).toLowerCase();
+  var akses = await periksaAkses(email);
+  if(!akses.ok){
+    var c = getClient();
+    if(c && c.auth && c.auth.signOut){ try{ await c.auth.signOut(); }catch(e){} }
+    if(akses.alasan === "setup"){
+      tampilPopup("Fitur ini belum aktif","Fitur ini belum aktif — pengaturan cloud belum dijalankan. Silakan hubungi pemilik usaha.");
+    }else{
+      tampilPopup("Belum terdaftar","Akun ini belum terdaftar sebagai pegawai — hubungi pemilik usaha.");
+    }
+    return {ok:false, ditolak:true, alasan:akses.alasan};
+  }
+  S.user = u; S.email = email;
+  S.nama = akses.nama || ""; S.peran = akses.peran || [];
+  tampilDashboard();
+  await muatLayarAktif();
+  return {ok:true};
+}
+async function periksaAkses(email){
+  var c = getClient();
+  if(!c) return {ok:false, alasan:"setup"};
+  var r;
+  try{ r = await c.from("akses_pegawai").select("email,nama,peran,aktif").eq("email", email); }
+  catch(e){ return {ok:false, alasan:"setup", error:e}; }
+  if(r.error){
+    return {ok:false, alasan:"setup", error:r.error};
+  }
+  var rows = Array.isArray(r.data) ? r.data.filter(function(x){ return x && x.aktif === true; }) : [];
+  if(!rows.length) return {ok:false, alasan:"tidak-terdaftar"};
+  var row = rows[0];
+  return {ok:true, nama: row.nama || "", peran: Array.isArray(row.peran) ? row.peran : []};
+}
+async function daftar(email, sandi){
+  email = String(email||"").trim(); sandi = String(sandi||"");
+  if(!email || !sandi){ tampilPopup("Belum lengkap","Isi email dan kata sandi, lalu coba lagi."); return {ok:false}; }
+  if(email.indexOf("@") < 1 || email.indexOf(".") < 0){ tampilPopup("Email belum benar","Periksa lagi alamat email Anda — pakai email yang masih aktif."); return {ok:false}; }
+  if(sandi.length < 6){ tampilPopup("Kata sandi terlalu pendek","Buat kata sandi minimal 6 karakter."); return {ok:false}; }
+  var c = getClient();
+  if(!c){ tampilPopup("Fitur ini belum aktif","Fitur ini belum aktif — pengaturan cloud belum dijalankan. Coba lagi nanti."); return {ok:false, setup:true}; }
+  var r;
+  try{ r = await c.auth.signUp({email:email, password:sandi, options:{emailRedirectTo: PEGAWAI_URL}}); }
+  catch(e){ tampilPopup("Tidak bisa mendaftar", pesanRamah(e)); return {ok:false}; }
+  if(r.error){ tampilPopup("Tidak bisa mendaftar", pesanRamah(r.error)); return {ok:false, error:r.error}; }
+  tampilKonfirmasi(email);
+  return {ok:true};
+}
+function tampilKonfirmasi(email){
+  S.emailKonfirmasi = email || "";
+  el("teksKonfirmasi").textContent = "Kami sudah mengirim tautan konfirmasi ke " + (email || "email Anda") + ".";
+  tampilPanel("panelKonfirmasi");
+}
+async function kirimUlangKonfirmasi(){
+  var email = S.emailKonfirmasi || el("emailDaftar").value || el("emailMasuk").value;
+  email = String(email || "").trim();
+  if(!email){ tampilPopup("Belum lengkap","Isi email akun Anda, lalu coba lagi."); return {ok:false}; }
+  var c = getClient();
+  if(!c){ tampilPopup("Fitur ini belum aktif","Fitur ini belum aktif — pengaturan cloud belum dijalankan. Coba lagi nanti."); return {ok:false, setup:true}; }
+  try{
+    if(c.auth && c.auth.resend){
+      var r = await c.auth.resend({type:"signup", email:email});
+      if(r.error){ tampilPopup("Belum bisa mengirim ulang", pesanRamah(r.error)); return {ok:false, error:r.error}; }
+    }else{
+      var r2 = await c.auth.signUp({email:email, password:"", options:{emailRedirectTo: PEGAWAI_URL}});
+      if(r2.error && !/password/i.test(String(r2.error.message || ""))){
+        tampilPopup("Belum bisa mengirim ulang", pesanRamah(r2.error)); return {ok:false, error:r2.error};
+      }
+    }
+  }catch(e){ tampilPopup("Belum bisa mengirim ulang", pesanRamah(e)); return {ok:false}; }
+  tampilPopup("Tautan dikirim ulang","Tautan konfirmasi baru sudah kami kirim ke " + email + ".\nBuka email itu dan ketuk tautannya.");
+  return {ok:true};
+}
+async function lupaSandi(email){
+  email = String(email||"").trim();
+  if(!email){ tampilPopup("Belum lengkap","Isi email akun Anda, lalu coba lagi."); return {ok:false}; }
+  var c = getClient();
+  if(!c){ tampilPopup("Fitur ini belum aktif","Fitur ini belum aktif — pengaturan cloud belum dijalankan. Coba lagi nanti."); return {ok:false, setup:true}; }
+  var r;
+  try{ r = await c.auth.resetPasswordForEmail(email, {redirectTo: PEGAWAI_URL}); }
+  catch(e){ tampilPopup("Tidak bisa mengirim tautan", pesanRamah(e)); return {ok:false}; }
+  if(r.error){ tampilPopup("Tidak bisa mengirim tautan", pesanRamah(r.error)); return {ok:false, error:r.error}; }
+  tampilPopup("Tautan dikirim","Bila email itu terdaftar, tautan untuk membuat kata sandi baru sudah kami kirim.\nBuka email Anda dan ketuk tautannya.");
+  return {ok:true};
+}
+async function simpanSandiBaru(a, b){
+  a = String(a||""); b = String(b||"");
+  if(a.length < 6){ tampilPopup("Kata sandi terlalu pendek","Buat kata sandi minimal 6 karakter."); return {ok:false}; }
+  if(a !== b){ tampilPopup("Kata sandi tidak sama","Ketik ulang kata sandi baru sama persis dengan yang pertama."); return {ok:false}; }
+  var c = getClient();
+  if(!c){ tampilPopup("Fitur ini belum aktif","Fitur ini belum aktif — pengaturan cloud belum dijalankan. Coba lagi nanti."); return {ok:false, setup:true}; }
+  var r;
+  try{ r = await c.auth.updateUser({password:a}); }
+  catch(e){ tampilPopup("Belum bisa menyimpan", pesanRamah(e)); return {ok:false}; }
+  if(r.error){ tampilPopup("Belum bisa menyimpan", pesanRamah(r.error)); return {ok:false, error:r.error}; }
+  tampilPopup("Kata sandi baru tersimpan","Kata sandi Anda sudah diganti. Silakan masuk dengan kata sandi baru.");
+  tampilPanel("panelMasuk");
+  return {ok:true};
+}
+async function keluar(){
+  var c = getClient();
+  if(c && c.auth && c.auth.signOut){ try{ await c.auth.signOut(); }catch(e){} }
+  S.user = null; S.email = null; S.nama = null; S.peran = [];
+  S.namaUsaha = null; S.sops = []; S.jalankan = {};
+  el("layarDashboard").classList.add("hidden");
+  el("layarMasuk").classList.remove("hidden");
+  tampilPanel("panelMasuk");
+}
+
+/* ===== Ambil data lewat RPC (semua RPC memeriksa izin di cloud) ===== */
+async function panggilRpc(nama, arg){
+  var c = getClient();
+  if(!c) return {ok:false, setup:true};
+  var r;
+  try{ r = await c.rpc(nama, arg || {}); }
+  catch(e){
+    if(apakahErrorSetup(e)) return {ok:false, setup:true, error:e};
+    return {ok:false, error:e};
+  }
+  if(r.error){
+    if(apakahErrorSetup(r.error)) return {ok:false, setup:true, error:r.error};
+    return {ok:false, error:r.error};
+  }
+  var d = r.data;
+  if(Array.isArray(d)) d = d[0] || null;
+  return {ok:true, data:d};
+}
+
+/* ===== Navigasi layar ===== */
+function tampilLayar(nama){
+  S.layar = nama;
+  var btns = document.querySelectorAll("#tabbar button");
+  btns.forEach(function(b){ b.classList.toggle("aktif", b.getAttribute("data-layar") === nama); });
+  ["sop","peran","profil"].forEach(function(l){
+    el("layar" + l.charAt(0).toUpperCase() + l.slice(1)).classList.toggle("aktif", l === nama);
+  });
+}
+function tampilPanel(id){
+  ["panelMasuk","panelDaftar","panelKonfirmasi","panelLupa","panelSandiBaru"].forEach(function(p){ el(p).classList.add("hidden"); });
+  el(id).classList.remove("hidden");
+}
+function tampilDashboard(){
+  el("layarMasuk").classList.add("hidden");
+  el("layarDashboard").classList.remove("hidden");
+  el("infoPeran").textContent = (S.nama ? S.nama + " — " : "") + (S.email || "") + " — Pegawai";
+  tampilLayar("sop");
+}
+async function muatLayarAktif(){
+  if(S.layar === "sop") return muatSop();
+  if(S.layar === "peran") return muatPeran();
+  if(S.layar === "profil") return muatProfil();
+  return {ok:false};
+}
+</script>
+<script>
+"use strict";
+/* ===== Layar 1: SOP Saya (daftar centang hari ini) ===== */
+/* Aturan centang: langkah dicentang berurutan dari awal — mencentang
+   langkah ke-3 otomatis mencentang langkah 1–2; melepas centang
+   langkah ke-2 otomatis melepas langkah 2 ke bawah. Jadi
+   langkah_selesai selalu sama dengan panjang awalan yang dicentang,
+   dan cocok dengan angka yang disimpan RPC (satu angka per SOP per
+   hari). Centang hari ini dimuat ulang dari cloud setiap kali layar
+   dibuka, supaya tetap sama setelah halaman dimuat ulang. */
+function petaJalankan(rows){
+  var peta = {};
+  (Array.isArray(rows) ? rows : []).forEach(function(r){
+    if(r && r.sop_id) peta[r.sop_id] = {langkah_selesai: Number(r.langkah_selesai) || 0, selesai: r.selesai === true};
+  });
+  return peta;
+}
+function htmlSopCard(sop){
+  var id = String(sop.id || "");
+  var steps = Array.isArray(sop.steps) ? sop.steps : [];
+  var j = S.jalankan[id] || {langkah_selesai:0, selesai:false};
+  var selesaiCount = Math.min(j.langkah_selesai, steps.length);
+  var semua = steps.length > 0 && selesaiCount >= steps.length;
+  var html = '<div class="sop-card" data-sop-id="' + esc(id) + '">'
+    + '<h3>' + esc(sop.nama || "SOP tanpa nama") + '</h3>'
+    + '<p class="meta">Penanggung jawab: ' + esc(sop.pj || "—") + '</p>'
+    + (sop.tujuan ? '<p class="tujuan">Tujuan: ' + esc(sop.tujuan) + '</p>' : '')
+    + '<p class="kemajuan' + (semua ? " selesai" : "") + '" data-kemajuan="' + esc(id) + '">'
+    + (semua ? "Selesai hari ini — semua " + steps.length + " langkah sudah dicentang."
+             : selesaiCount + " dari " + steps.length + " langkah hari ini.")
+    + '</p>';
+  steps.forEach(function(langkah, i){
+    var cek = i < selesaiCount ? " checked" : "";
+    html += '<label class="langkah"><input type="checkbox" data-sop-id="' + esc(id) + '" data-langkah="' + i + '"' + cek + '>'
+      + '<span class="teks">' + (i + 1) + ". " + esc(langkah) + '</span></label>';
+  });
+  html += '<div class="row" style="margin-top:12px">'
+    + '<button type="button" class="kecil" data-selesai-sop="' + esc(id) + '"' + (semua ? " disabled" : "") + '>Selesai jalankan SOP</button>'
+    + '</div></div>';
+  return html;
+}
+async function muatSop(){
+  var box = el("sopIsi");
+  el("sopTanggal").textContent = "Daftar centang hari ini — " + tanggalHariIni() + ".";
+  box.innerHTML = '<p class="muted">Memuat SOP…</p>';
+  var hasil = await panggilRpc("sops_untuk_pegawai", {});
+  if(!hasil.ok){
+    if(hasil.setup){ box.innerHTML = pesanSetupHtml(); tampilkanKotakSetup(); }
+    else { box.innerHTML = '<p class="muted">SOP belum bisa dimuat.</p>'; tampilPopup("Belum bisa memuat", pesanRamah(hasil.error)); }
+    return hasil;
+  }
+  var d = hasil.data || {};
+  S.namaUsaha = d.nama_usaha || null;
+  if(d.pegawai_nama) S.nama = d.pegawai_nama;
+  if(Array.isArray(d.peran)) S.peran = d.peran;
+  S.sops = Array.isArray(d.sops) ? d.sops : [];
+  S.jalankan = petaJalankan(d.jalankan_hari_ini);
+  el("namaUsahaAtas").textContent = S.namaUsaha || "pemilik";
+  el("infoPeran").textContent = (S.nama ? S.nama + " — " : "") + (S.email || "") + " — Pegawai";
+  if(!S.sops.length){
+    box.innerHTML = '<div class="belum-cukup"><p>Belum ada SOP untuk usaha ini.</p><p class="muted" style="margin-top:6px">Pemilik usaha belum menulis SOP. Bila SOP sudah ditulis, SOP muncul di sini.</p></div>';
+    return hasil;
+  }
+  box.innerHTML = S.sops.map(htmlSopCard).join("");
+  return hasil;
+}
+/* Mencatat centang ke cloud. dipanggil setiap kali centang berubah,
+   dan oleh tombol "Selesai jalankan SOP". */
+async function catatCentang(sopId, langkahSelesai, selesai){
+  var hasil = await panggilRpc("catat_sop_jalankan", {
+    p_sop_id: sopId, p_langkah_selesai: langkahSelesai, p_selesai: selesai
+  });
+  if(!hasil.ok){
+    if(hasil.setup){ tampilkanKotakSetup(); tampilPopup("Fitur ini belum aktif","Fitur ini belum aktif — pengaturan cloud belum dijalankan."); }
+    else { tampilPopup("Belum bisa menyimpan centang", pesanRamah(hasil.error)); }
+    return hasil;
+  }
+  var d = hasil.data || {};
+  S.jalankan[sopId] = {
+    langkah_selesai: Number(d.langkah_selesai != null ? d.langkah_selesai : langkahSelesai) || 0,
+    selesai: d.selesai === true
+  };
+  perbaruiKartuSop(sopId);
+  return hasil;
+}
+function perbaruiKartuSop(sopId){
+  var kartu = document.querySelector('.sop-card[data-sop-id="' + sopId + '"]');
+  if(!kartu) return;
+  var sop = null;
+  S.sops.forEach(function(s){ if(String(s.id) === String(sopId)) sop = s; });
+  if(!sop) return;
+  var html = htmlSopCard(sop);
+  var tmp = document.createElement("div");
+  tmp.innerHTML = html;
+  kartu.replaceWith(tmp.firstChild);
+}
+async function ubahCentang(checkbox){
+  var sopId = checkbox.getAttribute("data-sop-id");
+  var idx = Number(checkbox.getAttribute("data-langkah"));
+  var kartu = checkbox.closest(".sop-card");
+  if(!kartu) return {ok:false};
+  var kotak = Array.prototype.slice.call(kartu.querySelectorAll('input[type=checkbox][data-sop-id="' + sopId + '"]'));
+  /* Berurutan dari awal: centang mengisi semua langkah sebelumnya,
+     lepas centang menghapus langkah itu dan sesudahnya. */
+  if(checkbox.checked){
+    kotak.forEach(function(k, i){ if(i <= idx) k.checked = true; });
+  }else{
+    kotak.forEach(function(k, i){ if(i >= idx) k.checked = false; });
+  }
+  var jumlah = 0;
+  kotak.forEach(function(k){ if(k.checked) jumlah++; });
+  var selesai = kotak.length > 0 && jumlah >= kotak.length;
+  return catatCentang(sopId, jumlah, selesai);
+}
+async function selesaikanSop(sopId){
+  var sop = null;
+  S.sops.forEach(function(s){ if(String(s.id) === String(sopId)) sop = s; });
+  if(!sop) return {ok:false};
+  var jumlah = Array.isArray(sop.steps) ? sop.steps.length : 0;
+  var hasil = await catatCentang(sopId, jumlah, true);
+  if(hasil.ok){
+    tampilPopup("SOP selesai", "Terima kasih — \"" + (sop.nama || "SOP") + "\" sudah dicatat selesai hari ini.");
+  }
+  return hasil;
+}
+
+/* ===== Layar 2: Peran Saya ===== */
+/* Aturan "SOP yang saya pimpin": SOP yang penanggung jawabnya (pj)
+   sama persis dengan nama pegawai, tanpa membedakan huruf besar/kecil
+   dan spasi di ujung. Satu nama, satu penanggung jawab — bila nama
+   pegawai tertulis berbeda dengan nama di SOP (misalnya nama panggilan
+   di SOP), SOP itu tidak ikut; pemilik usaha yang menyamakan
+   penulisannya di SOP terkait. */
+function sopSayaPimpin(){
+  var namaSaya = String(S.nama || "").trim().toLowerCase();
+  if(!namaSaya) return [];
+  return S.sops.filter(function(s){
+    return String(s.pj || "").trim().toLowerCase() === namaSaya;
+  });
+}
+function htmlPeran(){
+  if(!S.peran.length) return '<p class="muted">Peran Anda belum dicatat pemilik usaha. Tanyakan kepada pemilik usaha peran apa saja yang sudah Anda latih.</p>';
+  var html = "";
+  S.peran.forEach(function(p){ html += '<span class="peran-chip">' + esc(namaPeran(p)) + '</span>'; });
+  return html;
+}
+function htmlSopSayaPimpin(rows){
+  if(!rows.length) return '<p class="muted">Belum ada SOP yang penanggung jawabnya adalah nama Anda.</p>';
+  var html = "";
+  rows.forEach(function(s){
+    html += '<div class="sop-card"><h3>' + esc(s.nama || "SOP tanpa nama") + '</h3>'
+      + (s.tujuan ? '<p class="tujuan">Tujuan: ' + esc(s.tujuan) + '</p>' : '')
+      + '<p class="meta">' + (Array.isArray(s.steps) ? s.steps.length : 0) + ' langkah</p></div>';
+  });
+  return html;
+}
+async function muatPeran(){
+  var box = el("peranIsi");
+  var boxSop = el("peranSopIsi");
+  /* Bila SOP belum pernah dimuat (masuk langsung ke layar ini), muat
+     dulu dari cloud supaya peran dan daftar SOP terisi. */
+  if(!S.sops.length && !S.namaUsaha){
+    var hasil = await muatSop();
+    if(!hasil.ok){ box.innerHTML = '<p class="muted">Peran belum bisa dimuat.</p>'; return hasil; }
+    tampilLayar("peran");
+  }
+  box.innerHTML = htmlPeran();
+  boxSop.innerHTML = htmlSopSayaPimpin(sopSayaPimpin());
+  return {ok:true};
+}
+
+/* ===== Layar 3: Profil ===== */
+function htmlProfil(){
+  var html = '<p><b>Nama</b><br>' + esc(S.nama || "—") + '</p>'
+    + '<p style="margin-top:10px"><b>Email</b><br>' + esc(S.email || "—") + '</p>'
+    + '<p style="margin-top:10px"><b>Usaha</b><br>' + esc(S.namaUsaha || "—") + '</p>'
+    + '<p style="margin-top:10px"><b>Peran yang sudah dilatih</b></p>'
+    + (S.peran.length
+        ? '<p>' + S.peran.map(function(p){ return esc(namaPeran(p)); }).join(", ") + '</p>'
+        : '<p class="muted">Belum dicatat pemilik usaha.</p>')
+    + '<p class="muted" style="margin-top:14px">Aplikasi Pegawai — UMKM Tumbuh. Bila ada yang perlu diubah (nama, peran), beri tahu pemilik usaha.</p>';
+  return html;
+}
+async function muatProfil(){
+  var box = el("profilIsi");
+  if(!S.sops.length && !S.namaUsaha){
+    var hasil = await muatSop();
+    if(!hasil.ok){ box.innerHTML = '<p class="muted">Profil belum bisa dimuat.</p>'; return hasil; }
+    tampilLayar("profil");
+  }
+  box.innerHTML = htmlProfil();
+  return {ok:true};
+}
+
+/* ===== Init & event ===== */
+function hashParam(k){ try{ return new URLSearchParams(String(window.location.hash||"").replace(/^#/,"")).get(k); }catch(e){ return null; } }
+function bindEvents(){
+  el("btnPopupTutup").addEventListener("click", tutupPopup);
+  el("popupOverlay").addEventListener("click", function(e){ if(e.target === el("popupOverlay")) tutupPopup(); });
+  el("btnMasuk").addEventListener("click", async function(){ await masuk(el("emailMasuk").value, el("sandiMasuk").value); });
+  el("btnKeDaftar").addEventListener("click", function(){ tampilPanel("panelDaftar"); });
+  el("btnBatalDaftar").addEventListener("click", function(){ tampilPanel("panelMasuk"); });
+  el("btnDaftar").addEventListener("click", async function(){ await daftar(el("emailDaftar").value, el("sandiDaftar").value); });
+  el("btnKirimUlang").addEventListener("click", kirimUlangKonfirmasi);
+  el("btnKeMasukDariKonfirmasi").addEventListener("click", function(){ tampilPanel("panelMasuk"); });
+  el("btnKeLupa").addEventListener("click", function(){ tampilPanel("panelLupa"); });
+  el("btnBatalLupa").addEventListener("click", function(){ tampilPanel("panelMasuk"); });
+  el("btnKirimLupa").addEventListener("click", async function(){ await lupaSandi(el("emailLupa").value); });
+  el("btnSimpanSandi").addEventListener("click", async function(){ await simpanSandiBaru(el("sandiBaru").value, el("sandiBaru2").value); });
+  el("btnKeluar").addEventListener("click", keluar);
+  el("btnKeluarProfil").addEventListener("click", keluar);
+  el("btnSalinSql").addEventListener("click", salinSql);
+  document.querySelectorAll("#tabbar button").forEach(function(b){
+    b.addEventListener("click", async function(){
+      tampilLayar(b.getAttribute("data-layar"));
+      await muatLayarAktif();
+    });
+  });
+  document.addEventListener("change", function(e){
+    var t = e.target;
+    if(t && t.matches && t.matches('input[type=checkbox][data-sop-id]')){
+      ubahCentang(t);
+    }
+  });
+  document.addEventListener("click", function(e){
+    var t = e.target;
+    if(t && t.getAttribute){
+      var s = t.getAttribute("data-selesai-sop");
+      if(s){ selesaikanSop(s); return; }
+    }
+  });
+}
+async function init(){
+  bindEvents();
+  /* Tautan atur ulang kata sandi dari email membuka aplikasi ini dengan
+     hash type=recovery — tampilkan layar "Buat kata sandi baru". */
+  if(hashParam("type") === "recovery" || hashParam("error_code") || hashParam("error")){
+    tampilPanel("panelSandiBaru");
+    return;
+  }
+  var c = getClient();
+  if(c && c.auth && c.auth.getSession){
+    try{
+      var r = await c.auth.getSession();
+      var u = r && r.data && r.data.session && r.data.session.user;
+      if(u) await sesudahMasuk(u);
+    }catch(e){ /* tetap di layar masuk */ }
+  }
+}
+if(document.readyState === "loading"){ document.addEventListener("DOMContentLoaded", init); }
+else { init(); }
+
+/* Ekspos untuk pengujian otomatis */
+window.__pegawai = {
+  S:S, PEGAWAI_URL:PEGAWAI_URL, EMAIL_PEMILIK:EMAIL_PEMILIK,
+  CLOUD_URL:CLOUD_URL, CLOUD_ANON:CLOUD_ANON, SQL_TEXT:SQL_TEXT,
+  setClient:function(m){ __client = m; },
+  getClient:getClient,
+  masuk:masuk, daftar:daftar, kirimUlangKonfirmasi:kirimUlangKonfirmasi,
+  lupaSandi:lupaSandi, simpanSandiBaru:simpanSandiBaru, keluar:keluar,
+  periksaAkses:periksaAkses, sesudahMasuk:sesudahMasuk,
+  muatSop:muatSop, muatPeran:muatPeran, muatProfil:muatProfil,
+  ubahCentang:ubahCentang, selesaikanSop:selesaikanSop, catatCentang:catatCentang,
+  sopSayaPimpin:sopSayaPimpin, namaPeran:namaPeran,
+  tampilLayar:tampilLayar, tampilDashboard:tampilDashboard, muatLayarAktif:muatLayarAktif,
+  tampilPopup:tampilPopup, tutupPopup:tutupPopup, salinSql:salinSql,
+  tampilKonfirmasi:tampilKonfirmasi, tampilPanel:tampilPanel,
+  apakahErrorSetup:apakahErrorSetup, fmtTanggal:fmtTanggal,
+  tampilkanKotakSetup:tampilkanKotakSetup, htmlSopCard:htmlSopCard
+};
+</script>
+</body>
+</html>
