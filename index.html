@@ -175,7 +175,7 @@ textarea.catatan-sop{min-height:64px}
     </div>
 
     <div class="card">
-      <p>Anda hanya melihat SOP usaha <b id="namaUsahaAtas">pemilik</b> dan daftar centang harian Anda. Tidak ada data keuangan usaha di aplikasi ini.</p>
+      <p>Anda hanya melihat SOP usaha <b id="namaUsahaAtas">…</b> dan daftar centang harian Anda. Tidak ada data keuangan usaha di aplikasi ini.</p>
     </div>
 
     <div class="card hidden" id="kotakSetup">
@@ -202,6 +202,7 @@ textarea.catatan-sop{min-height:64px}
         <h2>SOP Saya</h2>
         <p class="muted" id="sopTanggal">Daftar centang hari ini.</p>
         <div id="sopIsi"><p class="muted">Memuat SOP…</p></div>
+        <div class="row" style="margin-top:12px"><button id="btnMuatSop" type="button" class="ghost">Muat ulang</button></div>
       </div>
     </section>
 
@@ -222,7 +223,7 @@ textarea.catatan-sop{min-height:64px}
         <div class="row" style="margin-top:12px"><button id="btnKirimFoto" type="button">Kirim foto</button></div>
         <h3>Kirim kwitansi</h3>
         <label for="lapKwitJumlah">Jumlah (Rp)</label>
-        <input type="number" id="lapKwitJumlah" placeholder="contoh: 50000" min="1" step="1">
+        <input type="text" id="lapKwitJumlah" placeholder="contoh: 50.000" inputmode="numeric" autocomplete="off">
         <label for="lapKwitKet">Kwitansi ini untuk apa</label>
         <input type="text" id="lapKwitKet" placeholder="contoh: Beli gula 5 kg">
         <div class="row" style="margin-top:8px"><button type="button" class="kecil ghost" data-bantu="kwitansi">Bantu tulis</button></div>
@@ -236,6 +237,7 @@ textarea.catatan-sop{min-height:64px}
       <div class="card">
         <h2>Laporan saya</h2>
         <div id="lapIsi"><p class="muted">Memuat laporan…</p></div>
+        <div class="row" style="margin-top:12px"><button id="btnMuatLaporan" type="button" class="ghost">Muat ulang</button></div>
       </div>
     </section>
 
@@ -243,6 +245,7 @@ textarea.catatan-sop{min-height:64px}
       <div class="card">
         <h2>Perlu dicek</h2>
         <p>Pekerjaan pegawai lain yang sudah selesai dan menunggu Anda cek — pemilik usaha menunjuk Anda sebagai pemeriksa SOP itu.</p>
+        <p class="muted" style="margin-top:6px">Bila Anda memimpin/memeriksa SOP tapi tidak tampil di sini, beri tahu pemilik — mungkin nama Anda tertulis berbeda di SOP.</p>
         <div id="cekIsi"><p class="muted">Memuat daftar…</p></div>
         <div class="row" style="margin-top:12px"><button id="btnMuatCek" type="button" class="ghost">Muat ulang</button></div>
       </div>
@@ -255,8 +258,9 @@ textarea.catatan-sop{min-height:64px}
         <div id="presStatus"><p class="muted">Memuat presensi…</p></div>
         <div class="row" style="margin-top:12px">
           <button id="btnPresMasuk" type="button">Masuk</button>
-          <button id="btnPresPulang" type="button" class="ghost">Pulang</button>
+          <button id="btnPresPulang" type="button" class="ghost" disabled>Pulang</button>
         </div>
+        <p class="muted" id="presPulangHint" style="margin-top:8px">Ketuk Masuk dulu.</p>
         <h3>7 hari terakhir</h3>
         <div id="presRiwayat"><p class="muted">—</p></div>
         <div class="row" style="margin-top:12px"><button id="btnMuatPres" type="button" class="ghost">Muat ulang</button></div>
@@ -270,6 +274,7 @@ textarea.catatan-sop{min-height:64px}
         <div id="peranIsi"><p class="muted">Memuat peran…</p></div>
         <h3>SOP yang saya pimpin</h3>
         <p class="muted">SOP yang penanggung jawabnya adalah nama Anda — SOP yang Anda pimpin jalannya setiap hari.</p>
+        <p class="muted" style="margin-top:6px">Bila Anda memimpin/memeriksa SOP tapi tidak tampil di sini, beri tahu pemilik — mungkin nama Anda tertulis berbeda di SOP.</p>
         <div id="peranSopIsi"><p class="muted">Memuat SOP…</p></div>
       </div>
     </section>
@@ -279,7 +284,7 @@ textarea.catatan-sop{min-height:64px}
         <h2>Profil</h2>
         <div id="profilIsi"><p class="muted">Memuat profil…</p></div>
         <div class="row" style="margin-top:16px">
-          <button id="btnKeluarProfil" type="button" class="ghost">Keluar dari aplikasi</button>
+          <button id="btnKeluarProfil" type="button" class="ghost">Keluar</button>
         </div>
       </div>
     </section>
@@ -296,8 +301,10 @@ textarea.catatan-sop{min-height:64px}
       <div id="pasFotoPratinjauWadah" style="margin-top:10px"></div>
       <div class="row" style="margin-top:16px">
         <button id="btnSimpanPasFoto" type="button">Simpan pas foto</button>
+        <button id="btnLewatiPasFoto" type="button" class="ghost">Lanjutkan tanpa foto dulu</button>
         <button id="btnKeluarGer" type="button" class="ghost">Keluar</button>
       </div>
+      <p class="muted" style="margin-top:10px">Bila kamera Anda bermasalah, Anda tetap bisa masuk dulu — pas foto bisa dilengkapi nanti dari Profil.</p>
     </div>
   </section>
 
@@ -310,6 +317,19 @@ textarea.catatan-sop{min-height:64px}
     <h3 id="popupJudul"></h3>
     <p id="popupIsi"></p>
     <div class="aksi"><button id="btnPopupTutup" type="button">Mengerti</button></div>
+  </div>
+</div>
+
+<!-- Dialog konfirmasi (Ya / Batal) — dipakai "Selesai jalankan SOP"
+     bila ada langkah belum dicentang dan "Tandai sudah dicek". -->
+<div class="popup-overlay" id="konfirmasiOverlay" role="dialog" aria-modal="true" aria-labelledby="konfirmasiJudul">
+  <div class="popup-card">
+    <h3 id="konfirmasiJudul"></h3>
+    <p id="konfirmasiIsi"></p>
+    <div class="aksi" style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap">
+      <button id="btnKonfirmasiBatal" type="button" class="ghost">Batal</button>
+      <button id="btnKonfirmasiYa" type="button">Ya</button>
+    </div>
   </div>
 </div>
 
@@ -2301,6 +2321,11 @@ function fmtTanggal(t){
 function namaPeran(k){
   var daftar=S.struktur||[];
   for(var i=0;i<daftar.length;i++){ if(daftar[i] && daftar[i].id===k) return daftar[i].nama||k||"—"; }
+  /* Struktur pemilik sudah dikirim (berisi) tapi peran ini tidak ada
+     di dalamnya: peran sudah dihapus pemilik — tampilkan label itu,
+     bukan slug/ID mentahnya. Bila struktur belum dikirim (SQL lama),
+     peta bawaan tetap memberi nama kas / produksi / stok. */
+  if(daftar.length > 0) return "peran sudah dihapus";
   return LABEL_PERAN[k] || k || "—";
 }
 function deskripsiPeran(k){
@@ -2318,7 +2343,8 @@ var S = { user:null, email:null, nama:null, peran:[], namaUsaha:null,
   layar:"sop", sops:[], jalankan:{}, emailKonfirmasi:null,
   struktur:[],
   pemilikId:null, fotoPath:null, laporan:[],
-  perluDicek:[], presensi:null, presensiRiwayat:[] };
+  perluDicek:[], presensi:null, presensiRiwayat:[], aksesCekTerakhir:0,
+  lewatiPasFoto:false };
 var __client = null;
 function getClient(){
   if(__client) return __client;
@@ -2335,10 +2361,30 @@ function tampilPopup(judul, isi){
   el("popupOverlay").classList.add("show");
 }
 function tutupPopup(){ el("popupOverlay").classList.remove("show"); }
+/* Dialog konfirmasi Ya / Batal: mengembalikan Promise<boolean>.
+   Dipakai "Selesai jalankan SOP" (bila ada langkah belum dicentang)
+   dan "Tandai sudah dicek" — keduanya menyebut nama yang dicek
+   sebelum tindakan apa pun dipanggil. */
+var konfirmasiJawab = null;
+function mintaKonfirmasi(judul, isi, teksYa){
+  return new Promise(function(selesai){
+    el("konfirmasiJudul").textContent = judul;
+    el("konfirmasiIsi").textContent = isi;
+    el("btnKonfirmasiYa").textContent = teksYa || "Ya";
+    el("konfirmasiOverlay").classList.add("show");
+    konfirmasiJawab = selesai;
+  });
+}
+function jawabKonfirmasi(nilai){
+  el("konfirmasiOverlay").classList.remove("show");
+  var f = konfirmasiJawab; konfirmasiJawab = null;
+  if(f) f(nilai);
+}
 function pesanRamah(err){
   var m = String((err && err.message) || err || "");
   if(/hanya pegawai yang terdaftar/i.test(m)) return "Aplikasi ini hanya untuk pegawai yang terdaftar.\nHubungi pemilik usaha bila Anda merasa seharusnya bisa masuk.";
   if(/batas foto hari ini/i.test(m)) return "Batas foto hari ini sudah tercapai (5 foto).\nFoto laporan bisa dikirim lagi besok. Kwitansi tanpa foto tetap bisa dikirim.";
+  if(/sop ini sudah diubah\/dihapus/i.test(m)) return "SOP ini sudah diubah atau dihapus pemilik.\nDaftar SOP sudah dimuat ulang — periksa lagi daftarnya.";
   if(/invalid login credentials|invalid email|invalid password/i.test(m)) return "Email atau kata sandi tidak cocok.\nPeriksa lagi ketikan Anda, lalu coba masuk kembali.";
   if(/email not confirmed|not confirmed/i.test(m)) return "Email Anda belum dikonfirmasi.\nBuka email Anda dan ketuk tautan konfirmasi yang kami kirim, lalu masuk kembali.";
   if(/too many requests|rate limit|email rate limit/i.test(m)) return "Terlalu banyak percobaan barusan.\nTunggu sebentar, lalu coba lagi.";
@@ -2416,9 +2462,11 @@ async function sesudahMasuk(u){
   S.nama = akses.nama || ""; S.peran = akses.peran || [];
   S.pemilikId = akses.pemilikId || null;
   S.fotoPath = akses.fotoPath || null;
-  /* Gerbang pas foto: pegawai tanpa pas foto belum bisa memakai
-     aplikasi — tampilkan layar "Lengkapi pas foto" sampai foto
-     wajahnya diunggah (ramah, bukan galat). */
+  /* Gerbang pas foto: pegawai tanpa pas foto diminta melengkapinya
+     saat masuk — tapi tidak dikunci: tombol "Lanjutkan tanpa foto
+     dulu" membiarkannya masuk (misalnya kameranya bermasalah), dan
+     gerbang muncul lagi saat masuk berikutnya sebagai pengingat
+     berkala; pas foto bisa dilengkapi nanti dari Profil. */
   if(!S.fotoPath){
     tampilkanGerPasFoto();
     return {ok:true, perluPasFoto:true};
@@ -2528,6 +2576,7 @@ async function keluar(){
   S.namaUsaha = null; S.sops = []; S.jalankan = {};
   S.pemilikId = null; S.fotoPath = null; S.laporan = [];
   S.perluDicek = []; S.presensi = null; S.presensiRiwayat = [];
+  S.aksesCekTerakhir = 0; S.lewatiPasFoto = false;
   el("layarDashboard").classList.add("hidden");
   el("layarPasFoto").classList.add("hidden");
   el("layarMasuk").classList.remove("hidden");
@@ -2572,11 +2621,17 @@ function tampilDashboard(){
   el("infoPeran").textContent = (S.nama ? S.nama + " — " : "") + (S.email || "") + " — Pegawai";
   tampilLayar("sop");
 }
+/* Daftar SOP selalu disegarkan dari cloud setiap kali layar dibuka —
+   pemilik bisa mengubah SOP kapan saja, dan daftar lama tidak boleh
+   dipakai lagi. Layar yang menampilkan SOP (SOP Saya, Laporan,
+   Peran Saya, Profil) memuat ulang lewat pemuatnya sendiri; layar
+   Perlu dicek dan Presensi ikut menyegarkan diam-diam (tanpa popup)
+   supaya daftar SOP tetap baru saat pegawai kembali ke layar SOP. */
 async function muatLayarAktif(){
   if(S.layar === "sop") return muatSop();
   if(S.layar === "laporan") return muatLaporan();
-  if(S.layar === "perluDicek") return muatPerluDicek();
-  if(S.layar === "presensi") return muatPresensi();
+  if(S.layar === "perluDicek"){ await muatSop(true); return muatPerluDicek(); }
+  if(S.layar === "presensi"){ await muatSop(true); return muatPresensi(); }
   if(S.layar === "peran") return muatPeran();
   if(S.layar === "profil") return muatProfil();
   return {ok:false};
@@ -2620,18 +2675,29 @@ function petaJalankan(rows){
   });
   return peta;
 }
-function htmlSopCard(sop){
-  var id = String(sop.id || "");
+/* Teks kemajuan satu SOP — dipakai kartu awal dan pembaruan
+   di tempat (perbaruiKartuSop) supaya keduanya selalu sama. */
+function statusSop(sop, j){
   var steps = Array.isArray(sop.steps) ? sop.steps : [];
-  var j = S.jalankan[id] || {langkah_selesai:0, selesai:false};
-  var selesaiCount = Math.min(j.langkah_selesai, steps.length);
+  var selesaiCount = Math.min(j.langkah_selesai || 0, steps.length);
   var semua = steps.length > 0 && selesaiCount >= steps.length;
   var pengecek = namaPengecek(sop);
-  var status = semua
+  var teks = semua
     ? (j.dicek_oleh
         ? "Sudah dicek oleh " + j.dicek_oleh + " — semua " + steps.length + " langkah sudah dicentang."
         : "Selesai hari ini — menunggu dicek oleh " + pengecek + ".")
     : selesaiCount + " dari " + steps.length + " langkah hari ini.";
+  return {teks:teks, semua:semua, selesaiCount:selesaiCount, langkah:steps.length};
+}
+function htmlSopCard(sop){
+  var id = String(sop.id || "");
+  var steps = Array.isArray(sop.steps) ? sop.steps : [];
+  var j = S.jalankan[id] || {langkah_selesai:0, selesai:false};
+  var st = statusSop(sop, j);
+  var selesaiCount = st.selesaiCount;
+  var semua = st.semua;
+  var pengecek = namaPengecek(sop);
+  var status = st.teks;
   var html = '<div class="sop-card" data-sop-id="' + esc(id) + '">'
     + '<h3>' + esc(sop.nama || "SOP tanpa nama") + '</h3>'
     + '<p class="meta">Penanggung jawab: ' + esc(sop.pj || "—") + '</p>'
@@ -2653,17 +2719,32 @@ function htmlSopCard(sop){
     + '</div>'
     + '<div class="row" style="margin-top:12px">'
     + '<button type="button" class="kecil" data-selesai-sop="' + esc(id) + '"' + (semua ? " disabled" : "") + '>Selesai jalankan SOP</button>'
+    + '<button type="button" class="kecil ghost" data-batal-selesai="' + esc(id) + '"' + (semua ? "" : " hidden") + '>Batalkan selesai</button>'
     + '</div></div>';
   return html;
 }
-async function muatSop(){
+/* Kartu untuk baris jalankan yang SOP-nya sudah tidak ada lagi:
+   diberi judul "SOP sudah dihapus" (bukan "—") dan tanpa kotak
+   centang, supaya pegawai tidak bisa melanjutkan centang SOP yang
+   sudah diubah/dihapus pemilik. */
+function htmlSopYatim(sopId, j){
+  var n = (j && Number(j.langkah_selesai)) || 0;
+  return '<div class="sop-card" data-sop-yatim="' + esc(sopId) + '">'
+    + '<h3>SOP sudah dihapus</h3>'
+    + '<p class="meta">SOP ini sudah diubah atau dihapus pemilik.</p>'
+    + (n > 0
+        ? '<p class="kemajuan">Anda sudah mencentang ' + n + ' langkah hari ini — centang ini tidak bisa dilanjutkan.</p>'
+        : '<p class="kemajuan">Centang hari ini tidak bisa dilanjutkan.</p>')
+    + '</div>';
+}
+async function muatSop(diam){
   var box = el("sopIsi");
   el("sopTanggal").textContent = "Daftar centang hari ini — " + tanggalHariIni() + ".";
   box.innerHTML = '<p class="muted">Memuat SOP…</p>';
   var hasil = await panggilRpc("sops_untuk_pegawai", {});
   if(!hasil.ok){
     if(hasil.setup){ box.innerHTML = pesanSetupHtml(); tampilkanKotakSetup(); }
-    else { box.innerHTML = '<p class="muted">SOP belum bisa dimuat.</p>'; tampilPopup("Belum bisa memuat", pesanRamah(hasil.error)); }
+    else { box.innerHTML = '<p class="muted">SOP belum bisa dimuat.</p>'; if(!diam) tampilPopup("Belum bisa memuat", pesanRamah(hasil.error)); }
     return hasil;
   }
   var d = hasil.data || {};
@@ -2671,21 +2752,38 @@ async function muatSop(){
   if(d.pegawai_nama) S.nama = d.pegawai_nama;
   if(Array.isArray(d.peran)) S.peran = d.peran;
   S.struktur = Array.isArray(d.struktur) ? d.struktur : [];
+  /* Urutan SOP dipertahankan apa adanya dari aplikasi utama (urutan
+     array dari RPC) — tidak diurutkan berdasarkan nama. */
   S.sops = Array.isArray(d.sops) ? d.sops : [];
   S.jalankan = petaJalankan(d.jalankan_hari_ini);
-  el("namaUsahaAtas").textContent = S.namaUsaha || "pemilik";
+  el("namaUsahaAtas").textContent = S.namaUsaha || "…";
   el("infoPeran").textContent = (S.nama ? S.nama + " — " : "") + (S.email || "") + " — Pegawai";
-  if(!S.sops.length){
+  /* Baris jalankan yang SOP-nya sudah tidak ada lagi (pemilik
+     mengubah/menghapus SOP setelah pegawai mulai mencentang):
+     tampilkan sebagai "SOP sudah dihapus", tanpa kotak centang. */
+  var ada = {};
+  S.sops.forEach(function(s){ ada[String(s.id)] = true; });
+  var html = S.sops.map(htmlSopCard).join("");
+  Object.keys(S.jalankan).forEach(function(id){
+    if(!ada[id]) html += htmlSopYatim(id, S.jalankan[id]);
+  });
+  if(!html){
     box.innerHTML = '<div class="belum-cukup"><p>Belum ada SOP untuk usaha ini.</p><p class="muted" style="margin-top:6px">Pemilik usaha belum menulis SOP. Bila SOP sudah ditulis, SOP muncul di sini.</p></div>';
     return hasil;
   }
-  box.innerHTML = S.sops.map(htmlSopCard).join("");
+  box.innerHTML = html;
   return hasil;
 }
 /* Mencatat centang ke cloud. dipanggil setiap kali centang berubah,
    dan oleh tombol "Selesai jalankan SOP". Parameter catatan opsional:
    bila tidak dikirim (null), catatan lama di cloud dipertahankan;
    bila dikirim, catatan diganti. */
+/* Galat kontrak baru catat_sop_jalankan: SOP tidak ditemukan lagi di
+   data usaha pemilik (diubah/dihapus setelah daftar SOP dimuat). */
+function apakahSopDihapus(err){
+  var m = String((err && err.message) || err || "");
+  return /sop ini sudah diubah\/dihapus/i.test(m);
+}
 async function catatCentang(sopId, langkahSelesai, selesai, catatan){
   var hasil = await panggilRpc("catat_sop_jalankan", {
     p_sop_id: sopId, p_langkah_selesai: langkahSelesai, p_selesai: selesai,
@@ -2693,6 +2791,13 @@ async function catatCentang(sopId, langkahSelesai, selesai, catatan){
   });
   if(!hasil.ok){
     if(hasil.setup){ tampilkanKotakSetup(); tampilPopup("Fitur ini belum aktif","Fitur ini belum aktif — pengaturan cloud belum dijalankan."); }
+    else if(apakahSopDihapus(hasil.error)){
+      /* SOP sudah diubah/dihapus pemilik setelah daftar dimuat:
+         beri tahu dengan ramah, lalu muat ulang daftar SOP supaya
+         pegawai melihat daftar terbaru (dan baris yatimnya). */
+      tampilPopup("SOP sudah diubah pemilik","SOP ini sudah diubah atau dihapus pemilik.\nDaftar SOP sudah dimuat ulang — periksa lagi daftarnya.");
+      await muatSop();
+    }
     else { tampilPopup("Belum bisa menyimpan centang", pesanRamah(hasil.error)); }
     return hasil;
   }
@@ -2717,26 +2822,29 @@ async function simpanCatatan(sopId){
   if(hasil.ok) tampilPopup("Catatan tersimpan", "Catatan Anda untuk SOP ini sudah tersimpan.");
   return hasil;
 }
+/* Pembaruan kartu SOP DI TEMPAT (tanpa menggambar ulang kartu):
+   hanya teks kemajuan, centang, dan tombol Selesai/Batalkan yang
+   diubah — simpul kartu, kolom catatan, dan fokus tetap sama,
+   supaya ketukan centang cepat tidak menggeser gulir atau
+   menghilangkan fokus dan draf catatan. */
 function perbaruiKartuSop(sopId){
   var kartu = document.querySelector('.sop-card[data-sop-id="' + sopId + '"]');
   if(!kartu) return;
-  /* Catatan yang sedang diketik (belum disimpan) dipertahankan
-     melewati gambar ulang kartu — hanya catatan tersimpan yang
-     diganti lewat S.jalankan. */
-  var drafCatatan = null;
-  var ta = kartu.querySelector('textarea[data-catatan-sop="' + sopId + '"]');
-  if(ta) drafCatatan = ta.value;
   var sop = null;
   S.sops.forEach(function(s){ if(String(s.id) === String(sopId)) sop = s; });
   if(!sop) return;
-  var html = htmlSopCard(sop);
-  var tmp = document.createElement("div");
-  tmp.innerHTML = html;
-  kartu.replaceWith(tmp.firstChild);
-  if(drafCatatan !== null){
-    var ta2 = document.querySelector('textarea[data-catatan-sop="' + sopId + '"]');
-    if(ta2) ta2.value = drafCatatan;
-  }
+  var j = S.jalankan[sopId] || {langkah_selesai:0, selesai:false};
+  var st = statusSop(sop, j);
+  var kem = kartu.querySelector('[data-kemajuan="' + sopId + '"]');
+  if(kem){ kem.textContent = st.teks; kem.classList.toggle("selesai", st.semua); }
+  var kotak = Array.prototype.slice.call(kartu.querySelectorAll('input[type=checkbox][data-sop-id="' + sopId + '"]'));
+  kotak.forEach(function(k, i){ k.checked = i < st.selesaiCount; });
+  var btnSelesai = kartu.querySelector('[data-selesai-sop="' + sopId + '"]');
+  if(btnSelesai) btnSelesai.disabled = st.semua;
+  var btnBatal = kartu.querySelector('[data-batal-selesai="' + sopId + '"]');
+  if(btnBatal) btnBatal.classList.toggle("hidden", !st.semua);
+  /* Kolom catatan sengaja tidak disentuh: draf yang sedang diketik
+     (belum disimpan) tetap utuh beserta fokusnya. */
 }
 async function ubahCentang(checkbox){
   var sopId = checkbox.getAttribute("data-sop-id");
@@ -2761,9 +2869,32 @@ async function selesaikanSop(sopId){
   S.sops.forEach(function(s){ if(String(s.id) === String(sopId)) sop = s; });
   if(!sop) return {ok:false};
   var jumlah = Array.isArray(sop.steps) ? sop.steps.length : 0;
+  /* Bila ada langkah belum dicentang, jangan langsung menandai
+     semua selesai dalam satu ketukan — minta konfirmasi dulu. */
+  var j = S.jalankan[sopId] || {langkah_selesai:0};
+  var sudah = Math.min(Number(j.langkah_selesai) || 0, jumlah);
+  if(sudah < jumlah){
+    var ya = await mintaKonfirmasi("Yakin semua langkah sudah dikerjakan?",
+      "\"" + (sop.nama || "SOP") + "\" — baru " + sudah + " dari " + jumlah + " langkah dicentang hari ini.\nBila ada langkah yang belum dikerjakan, ketuk Batal lalu centang dulu langkahnya.",
+      "Ya, sudah semua");
+    if(!ya) return {ok:false, dibatalkan:true};
+  }
   var hasil = await catatCentang(sopId, jumlah, true);
   if(hasil.ok){
     tampilPopup("SOP selesai", "Terima kasih — \"" + (sop.nama || "SOP") + "\" sudah dicatat selesai hari ini.");
+  }
+  return hasil;
+}
+/* Membatalkan status selesai: langkah terakhir dibuka lagi
+   (dicentang ulang bila memang sudah dikerjakan). */
+async function batalkanSelesai(sopId){
+  var sop = null;
+  S.sops.forEach(function(s){ if(String(s.id) === String(sopId)) sop = s; });
+  if(!sop) return {ok:false};
+  var jumlah = Array.isArray(sop.steps) ? sop.steps.length : 0;
+  var hasil = await catatCentang(sopId, Math.max(0, jumlah - 1), false);
+  if(hasil.ok){
+    tampilPopup("Selesai dibatalkan", "Status selesai untuk \"" + (sop.nama || "SOP") + "\" dibatalkan — langkah terakhir bisa dicentang lagi bila sudah dikerjakan.");
   }
   return hasil;
 }
@@ -2775,6 +2906,16 @@ async function selesaikanSop(sopId){
    JSON langsung (bukan dibungkus), jadi dipanggil lewat c.rpc
    langsung seperti muatLaporan — panggilRpc akan membuang semua
    baris kecuali yang pertama. */
+/* Satu baris pekerjaan yang perlu dicek. Nama SOP yang tidak ada
+   lagi (SOP sudah dihapus pemilik) tampil sebagai "SOP sudah
+   dihapus", bukan "—". */
+function htmlCekBaris(x){
+  return '<div class="cek-baris">'
+    + '<b>' + esc(x.pegawai_nama || x.pegawai_email || "Pegawai") + '</b>'
+    + '<span class="muted"> — ' + esc(x.sop_nama || "SOP sudah dihapus") + ' · ' + esc(fmtTanggal(x.tanggal)) + ' · ' + esc(String(x.langkah_selesai != null ? x.langkah_selesai : "—")) + ' langkah</span>'
+    + '<div class="row" style="margin-top:8px"><button type="button" class="kecil" data-verifikasi-sop="' + esc(x.sop_id || "") + '" data-verifikasi-email="' + esc(x.pegawai_email || "") + '" data-verifikasi-tanggal="' + esc(x.tanggal || "") + '" data-verifikasi-nama="' + esc(x.pegawai_nama || x.pegawai_email || "Pegawai") + '" data-verifikasi-sop-nama="' + esc(x.sop_nama || "SOP sudah dihapus") + '">Tandai sudah dicek</button></div>'
+    + '</div>';
+}
 async function muatPerluDicek(){
   var box = el("cekIsi");
   box.innerHTML = '<p class="muted">Memuat daftar…</p>';
@@ -2796,14 +2937,20 @@ async function muatPerluDicek(){
     box.innerHTML = '<p class="muted">Tidak ada pekerjaan yang perlu Anda cek.</p>';
     return {ok:true};
   }
-  box.innerHTML = daftar.map(function(x){
-    return '<div class="cek-baris">'
-      + '<b>' + esc(x.pegawai_nama || x.pegawai_email || "Pegawai") + '</b>'
-      + '<span class="muted"> — ' + esc(x.sop_nama || "SOP") + ' · ' + esc(fmtTanggal(x.tanggal)) + ' · ' + esc(String(x.langkah_selesai != null ? x.langkah_selesai : "—")) + ' langkah</span>'
-      + '<div class="row" style="margin-top:8px"><button type="button" class="kecil" data-verifikasi-sop="' + esc(x.sop_id || "") + '" data-verifikasi-email="' + esc(x.pegawai_email || "") + '" data-verifikasi-tanggal="' + esc(x.tanggal || "") + '">Tandai sudah dicek</button></div>'
-      + '</div>';
-  }).join("");
+  box.innerHTML = daftar.map(htmlCekBaris).join("");
   return {ok:true};
+}
+/* "Tandai sudah dicek" selalu lewat dialog konfirmasi yang menyebut
+   nama pegawai dan nama SOP — RPC verifikasi baru dipanggil bila
+   pemeriksa mengetuk "Ya, sudah saya cek". */
+async function tanyaVerifikasiSop(sopId, pegawaiEmail, tanggal, namaPegawai, namaSop){
+  var nama = namaPegawai || pegawaiEmail || "Pegawai";
+  var sop = namaSop || "SOP sudah dihapus";
+  var ya = await mintaKonfirmasi("Tandai sudah dicek?",
+    "Ya, sudah saya cek — " + nama + " sudah menyelesaikan \"" + sop + "\".",
+    "Ya, sudah saya cek");
+  if(!ya) return {ok:false, dibatalkan:true};
+  return verifikasiSop(sopId, pegawaiEmail, tanggal);
 }
 async function verifikasiSop(sopId, pegawaiEmail, tanggal){
   var hasil = await panggilRpc("verifikasi_sop_jalankan", {
@@ -2843,14 +2990,20 @@ function tampilPresensi(){
   var p = S.presensi;
   var masuk = p && p.masuk_pada ? fmtJam(p.masuk_pada) : null;
   var pulang = p && p.pulang_pada ? fmtJam(p.pulang_pada) : null;
+  /* Pulang tanpa Masuk ditampilkan secara eksplisit — bukan seolah
+     presensi normal. */
   el("presStatus").innerHTML = '<p>Masuk: <b>' + (masuk || "belum masuk") + '</b></p>'
-    + '<p style="margin-top:4px">Pulang: <b>' + (pulang || "belum pulang") + '</b></p>';
+    + '<p style="margin-top:4px">Pulang: <b>' + (pulang || "belum pulang") + '</b></p>'
+    + ((pulang && !masuk) ? '<p style="margin-top:4px">Pulang tanpa Masuk — Anda pulang hari ini tanpa menekan Masuk.</p>' : '');
   el("btnPresMasuk").disabled = !!masuk;
-  el("btnPresPulang").disabled = !!pulang;
+  /* Tombol Pulang mati sampai Masuk tercatat hari itu. */
+  el("btnPresPulang").disabled = !!pulang || !masuk;
+  var hint = el("presPulangHint");
+  if(hint) hint.classList.toggle("hidden", !!masuk);
   var rw = S.presensiRiwayat;
   el("presRiwayat").innerHTML = rw.length
     ? rw.map(function(x){
-        return '<p class="muted">' + esc(fmtTanggal(x.tanggal)) + ' — Masuk ' + esc(fmtJam(x.masuk_pada)) + ' · Pulang ' + esc(fmtJam(x.pulang_pada)) + '</p>';
+        return '<p class="muted">' + esc(fmtTanggal(x.tanggal)) + ' — Masuk ' + esc(fmtJam(x.masuk_pada)) + ' · Pulang ' + esc(fmtJam(x.pulang_pada)) + ((x.pulang_pada && !x.masuk_pada) ? ' — Pulang tanpa Masuk' : '') + '</p>';
       }).join("")
     : '<p class="muted">Belum ada presensi di 7 hari terakhir.</p>';
 }
@@ -2994,6 +3147,81 @@ async function fotoUrl(path){
   }catch(e){}
   return null;
 }
+/* Blok galat foto: tautan bertanda tangan hanya berlaku 1 jam, jadi
+   foto yang dibiarkan terbuka lama bisa gagal dimuat — pesannya
+   mengajak memuat ulang, bukan menyalahkan koneksi. */
+function htmlFotoGagal(path){
+  return '<p class="muted">Foto perlu dimuat ulang — ketuk Muat ulang.</p>'
+    + '<div class="row" style="margin-top:8px"><button type="button" class="kecil ghost" data-muat-foto="' + esc(path || "") + '">Muat ulang</button></div>';
+}
+/* Minta tautan bertanda tangan baru untuk satu foto, lalu muat ulang
+   gambarnya di tempat yang sama (tombol Muat ulang di blok galat). */
+async function muatUlangFoto(tombol, path){
+  var wadah = tombol ? tombol.closest("[data-foto-wadah]") : null;
+  if(!wadah && tombol) wadah = tombol.closest("#profilFoto");
+  if(!wadah) return {ok:false};
+  if(wadah.id === "profilFoto"){ await isiFotoProfil(); return {ok:true}; }
+  wadah.innerHTML = '<p class="muted">Memuat foto…</p>';
+  var url = await fotoUrl(path);
+  if(url){
+    wadah.innerHTML = '<img src="' + esc(url) + '" alt="Foto laporan" class="lap-thumb" data-foto-path="' + esc(path) + '">';
+    return {ok:true};
+  }
+  wadah.innerHTML = htmlFotoGagal(path);
+  return {ok:false};
+}
+/* Gambar gagal dimuat (tautan bertanda tangan habis masa berlakunya):
+   coba sekali dengan tautan baru; bila tetap gagal, ganti gambar
+   dengan pesan + tombol Muat ulang. */
+async function fotoGagal(img){
+  if(!img) return;
+  var coba = Number(img.getAttribute("data-coba-ulang") || 0);
+  if(coba >= 1){ gantiFotoDenganPesan(img); return; }
+  img.setAttribute("data-coba-ulang", "1");
+  var path = img.getAttribute("data-foto-path");
+  if(!path){ gantiFotoDenganPesan(img); return; }
+  var url = await fotoUrl(path);
+  if(url && document.contains(img)){
+    img.src = url;
+    img.removeAttribute("data-coba-ulang");
+    return;
+  }
+  gantiFotoDenganPesan(img);
+}
+function gantiFotoDenganPesan(img){
+  var wadah = img.closest("[data-foto-wadah]") || img.closest("#profilFoto");
+  if(!wadah) return;
+  wadah.innerHTML = htmlFotoGagal(img.getAttribute("data-foto-path"));
+}
+/* Segarkan semua foto yang sedang tampil: minta tautan bertanda
+   tangan baru untuk tiap gambar (tautan lama hanya berlaku 1 jam).
+   Dipanggil saat tab kembali fokus/terlihat. Dijaga supaya tidak
+   berjalan dua kali bersamaan dan tidak lebih dari sekali tiap
+   5 menit — foto yang baru dimuat tidak perlu langsung diminta lagi. */
+var fotoSegarJalan = false;
+var fotoSegarTerakhir = 0;
+async function segarkanFoto(){
+  if(fotoSegarJalan) return {ok:false, dilewat:true};
+  var kini = Date.now();
+  if(kini - fotoSegarTerakhir < 5*60*1000) return {ok:false, dilewat:true};
+  fotoSegarJalan = true;
+  fotoSegarTerakhir = kini;
+  try{
+    var gambar = Array.prototype.slice.call(document.querySelectorAll("img[data-foto-path]"));
+    for(var i = 0; i < gambar.length; i++){
+      var path = gambar[i].getAttribute("data-foto-path");
+      if(!path || !document.contains(gambar[i])) continue;
+      var url = await fotoUrl(path);
+      if(url && document.contains(gambar[i])){
+        gambar[i].src = url;
+        gambar[i].removeAttribute("data-coba-ulang");
+      }
+    }
+    return {ok:true, jumlah:gambar.length};
+  }finally{
+    fotoSegarJalan = false;
+  }
+}
 async function unggahBerkas(file, path){
   var c = getClient();
   if(!c || !c.storage) return {ok:false, setup:true};
@@ -3041,6 +3269,19 @@ async function simpanPasFotoDariGer(){
   tampilPopup("Pas foto tersimpan","Terima kasih — pas foto Anda sudah tersimpan. Pemilik usaha kini bisa mengenali Anda.");
   return hasil;
 }
+/* "Lanjutkan tanpa foto dulu": pegawai yang kameranya bermasalah
+   tetap bisa masuk dan memakai aplikasi. Pilihan ini dicatat
+   (tanggalnya) dan gerbang muncul lagi saat masuk berikutnya sebagai
+   pengingat berkala; pas foto bisa dilengkapi nanti dari Profil. */
+async function lewatiPasFoto(){
+  S.lewatiPasFoto = true;
+  try{ localStorage.setItem("pegawai-pasfoto-ditunda:v1", String(Date.now())); }catch(e){}
+  el("layarPasFoto").classList.add("hidden");
+  tampilDashboard();
+  await muatLayarAktif();
+  tampilPopup("Masuk tanpa pas foto", "Anda masuk tanpa pas foto — lengkapi nanti dari Profil bila sudah bisa, supaya pemilik usaha bisa mengenali Anda.");
+  return {ok:true, dilewati:true};
+}
 /* Upaya simpan pas foto di alur daftar (diam — bila pemilik belum
    mendaftarkan email ini, atau sesi belum terbentuk, gerbang masuk
    yang akan meminta pas foto). */
@@ -3084,19 +3325,18 @@ async function htmlLaporanCard(r){
     + '<p class="kemajuan">' + esc(statusLaporan(r)) + '</p>';
   if(r.file_path){
     var url = await fotoUrl(r.file_path);
-    if(url) html += '<p style="margin-top:10px"><img src="' + esc(url) + '" alt="Foto laporan" class="lap-thumb"></p>';
-    else html += '<p class="muted" style="margin-top:10px">Foto belum bisa ditampilkan — periksa koneksi Anda, lalu buka lagi layar ini.</p>';
+    if(url) html += '<div style="margin-top:10px" data-foto-wadah="' + esc(r.file_path) + '"><img src="' + esc(url) + '" alt="Foto laporan" class="lap-thumb" data-foto-path="' + esc(r.file_path) + '"></div>';
+    else html += '<div style="margin-top:10px" data-foto-wadah="' + esc(r.file_path) + '">' + htmlFotoGagal(r.file_path) + '</div>';
   }
   html += '</div>';
   return html;
 }
 async function muatLaporan(){
   var box = el("lapIsi");
+  /* Pilihan SOP di formulir laporan harus dari daftar terbaru —
+     muat ulang SOP dulu, baru isi pilihan dan daftar laporan. */
+  await muatSop();
   isiOpsiSopLaporan();
-  if(!S.sops.length){
-    var awal = await muatSop();
-    if(awal.ok) isiOpsiSopLaporan();
-  }
   box.innerHTML = '<p class="muted">Memuat laporan…</p>';
   /* laporan_saya mengembalikan larik JSON mentah (bukan satu baris
      tabel), jadi dipanggil langsung — bukan lewat panggilRpc yang
@@ -3126,47 +3366,78 @@ async function muatLaporan(){
   box.innerHTML = html;
   return {ok:true, data:rows};
 }
+/* Pengaman kirim ganda (sisi klien): selama satu kiriman sedang
+   berjalan (kompresi + unggah + RPC), tombol dimatikan dan bertulis
+   "Mengirim…"; ketukan kedua diabaikan. */
+var sedangKirimFoto = false;
+var sedangKirimKwitansi = false;
+function aturTombolKirim(id, sedang, teksAsal){
+  var b = el(id);
+  if(!b) return;
+  b.disabled = sedang;
+  b.textContent = sedang ? "Mengirim…" : teksAsal;
+}
 async function kirimLaporanFoto(keterangan, sopId, file){
   keterangan = String(keterangan || "").trim();
   if(!keterangan){ tampilPopup("Keterangan belum diisi","Tulis keterangan fotonya dulu, contoh: Warung sudah rapi sebelum buka."); return {ok:false}; }
   if(!file){ tampilPopup("Foto belum dipilih","Pilih foto dulu, lalu ketuk Kirim foto."); return {ok:false}; }
   if(!S.pemilikId){ tampilPopup("Belum bisa mengirim","Coba masuk lagi, lalu kirim laporan Anda."); return {ok:false}; }
-  var email = String(S.email || "").toLowerCase();
-  var path = S.pemilikId + "/" + email + "/" + uuidBaru() + ".jpg";
-  var up = await unggahBerkas(file, path);
-  if(!up.ok){ tampilPopup("Foto belum bisa diunggah", pesanRamah(up.error)); return {ok:false, error:up.error}; }
-  var hasil = await panggilRpc("kirim_laporan_pegawai", {p_jenis:"foto", p_keterangan:keterangan, p_jumlah:null, p_file_path:path, p_sop_id:sopId || null});
-  if(!hasil.ok){
-    if(hasil.setup){ tampilkanKotakSetup(); tampilPopup("Fitur ini belum aktif","Fitur ini belum aktif — pengaturan cloud belum dijalankan."); }
-    else { tampilPopup("Laporan belum terkirim", pesanRamah(hasil.error)); }
+  if(sedangKirimFoto) return {ok:false, ganda:true};
+  sedangKirimFoto = true;
+  aturTombolKirim("btnKirimFoto", true, "Kirim foto");
+  try{
+    var email = String(S.email || "").toLowerCase();
+    var path = S.pemilikId + "/" + email + "/" + uuidBaru() + ".jpg";
+    var up = await unggahBerkas(file, path);
+    if(!up.ok){ tampilPopup("Foto belum bisa diunggah", pesanRamah(up.error)); return {ok:false, error:up.error}; }
+    var hasil = await panggilRpc("kirim_laporan_pegawai", {p_jenis:"foto", p_keterangan:keterangan, p_jumlah:null, p_file_path:path, p_sop_id:sopId || null});
+    if(!hasil.ok){
+      if(hasil.setup){ tampilkanKotakSetup(); tampilPopup("Fitur ini belum aktif","Fitur ini belum aktif — pengaturan cloud belum dijalankan."); }
+      else { tampilPopup("Laporan belum terkirim", pesanRamah(hasil.error)); }
+      return hasil;
+    }
+    await muatLaporan();
+    tampilPopup("Foto terkirim","Terima kasih — foto Anda sudah terkirim ke pemilik usaha.");
     return hasil;
+  }finally{
+    sedangKirimFoto = false;
+    aturTombolKirim("btnKirimFoto", false, "Kirim foto");
   }
-  await muatLaporan();
-  tampilPopup("Foto terkirim","Terima kasih — foto Anda sudah terkirim ke pemilik usaha.");
-  return hasil;
 }
 async function kirimKwitansi(jumlah, keterangan, sopId, file){
-  jumlah = Number(jumlah);
+  /* Jumlah boleh datang sebagai angka atau teks berformat ribuan
+     ("50.000") dari kolom isian — ambil hanya angkanya. Tanda minus
+     di depan tetap ditolak (jumlah harus lebih dari Rp 0). */
+  var teksJumlah = String(jumlah);
+  jumlah = /^\s*-/.test(teksJumlah) ? -1 : (Number(teksJumlah.replace(/[^0-9]/g, "")) || 0);
   keterangan = String(keterangan || "").trim();
   if(!(jumlah > 0)){ tampilPopup("Jumlah belum benar","Isi jumlah kwitansi dalam rupiah — harus lebih dari Rp 0."); return {ok:false}; }
   if(!keterangan){ tampilPopup("Keterangan belum diisi","Tulis kwitansi ini untuk apa, contoh: Beli gula 5 kg."); return {ok:false}; }
   if(!S.pemilikId){ tampilPopup("Belum bisa mengirim","Coba masuk lagi, lalu kirim laporan Anda."); return {ok:false}; }
-  var path = null;
-  if(file){
-    var email = String(S.email || "").toLowerCase();
-    path = S.pemilikId + "/" + email + "/" + uuidBaru() + ".jpg";
-    var up = await unggahBerkas(file, path);
-    if(!up.ok){ tampilPopup("Foto kwitansi belum bisa diunggah", pesanRamah(up.error)); return {ok:false, error:up.error}; }
-  }
-  var hasil = await panggilRpc("kirim_laporan_pegawai", {p_jenis:"kwitansi", p_keterangan:keterangan, p_jumlah:jumlah, p_file_path:path, p_sop_id:sopId || null});
-  if(!hasil.ok){
-    if(hasil.setup){ tampilkanKotakSetup(); tampilPopup("Fitur ini belum aktif","Fitur ini belum aktif — pengaturan cloud belum dijalankan."); }
-    else { tampilPopup("Laporan belum terkirim", pesanRamah(hasil.error)); }
+  if(sedangKirimKwitansi) return {ok:false, ganda:true};
+  sedangKirimKwitansi = true;
+  aturTombolKirim("btnKirimKwitansi", true, "Kirim kwitansi");
+  try{
+    var path = null;
+    if(file){
+      var email = String(S.email || "").toLowerCase();
+      path = S.pemilikId + "/" + email + "/" + uuidBaru() + ".jpg";
+      var up = await unggahBerkas(file, path);
+      if(!up.ok){ tampilPopup("Foto kwitansi belum bisa diunggah", pesanRamah(up.error)); return {ok:false, error:up.error}; }
+    }
+    var hasil = await panggilRpc("kirim_laporan_pegawai", {p_jenis:"kwitansi", p_keterangan:keterangan, p_jumlah:jumlah, p_file_path:path, p_sop_id:sopId || null});
+    if(!hasil.ok){
+      if(hasil.setup){ tampilkanKotakSetup(); tampilPopup("Fitur ini belum aktif","Fitur ini belum aktif — pengaturan cloud belum dijalankan."); }
+      else { tampilPopup("Laporan belum terkirim", pesanRamah(hasil.error)); }
+      return hasil;
+    }
+    await muatLaporan();
+    tampilPopup("Kwitansi terkirim","Terima kasih — kwitansi Anda sudah terkirim ke pemilik usaha.");
     return hasil;
+  }finally{
+    sedangKirimKwitansi = false;
+    aturTombolKirim("btnKirimKwitansi", false, "Kirim kwitansi");
   }
-  await muatLaporan();
-  tampilPopup("Kwitansi terkirim","Terima kasih — kwitansi Anda sudah terkirim ke pemilik usaha.");
-  return hasil;
 }
 
 /* ===== Layar 2: Peran Saya ===== */
@@ -3191,6 +3462,8 @@ function htmlPeran(){
   var ket=[];
   S.peran.forEach(function(p){ var d=deskripsiPeran(p); if(d) ket.push(namaPeran(p) + " — " + d); });
   if(ket.length) html += '<p class="muted" style="margin-top:10px">' + esc(ket.join(" ")) + '</p>';
+  var hapus = S.peran.filter(function(p){ return namaPeran(p) === "peran sudah dihapus"; });
+  if(hapus.length) html += '<p class="muted" style="margin-top:10px">Ada peran yang sudah dihapus pemilik dari struktur usaha — beri tahu pemilik bila peran itu seharusnya masih ada.</p>';
   return html;
 }
 function htmlSopSayaPimpin(rows){
@@ -3206,13 +3479,12 @@ function htmlSopSayaPimpin(rows){
 async function muatPeran(){
   var box = el("peranIsi");
   var boxSop = el("peranSopIsi");
-  /* Bila SOP belum pernah dimuat (masuk langsung ke layar ini), muat
-     dulu dari cloud supaya peran dan daftar SOP terisi. */
-  if(!S.sops.length && !S.namaUsaha){
-    var hasil = await muatSop();
-    if(!hasil.ok){ box.innerHTML = '<p class="muted">Peran belum bisa dimuat.</p>'; return hasil; }
-    tampilLayar("peran");
-  }
+  /* Daftar SOP selalu dimuat ulang dari cloud setiap kali layar ini
+     dibuka — pemilik bisa mengubah SOP kapan saja, dan "SOP yang
+     saya pimpin" tidak boleh memakai daftar lama. */
+  var hasil = await muatSop();
+  if(!hasil.ok){ box.innerHTML = '<p class="muted">Peran belum bisa dimuat.</p>'; return hasil; }
+  tampilLayar("peran");
   box.innerHTML = htmlPeran();
   boxSop.innerHTML = htmlSopSayaPimpin(sopSayaPimpin());
   return {ok:true};
@@ -3228,16 +3500,30 @@ function htmlProfil(){
         ? '<p>' + S.peran.map(function(p){ return esc(namaPeran(p)); }).join(", ") + '</p>'
         : '<p class="muted">Belum dicatat pemilik usaha.</p>')
     + '<p class="muted" style="margin-top:14px">Aplikasi Pegawai — UMKM Tumbuh. Bila ada yang perlu diubah (nama, peran), beri tahu pemilik usaha.</p>'
-    + '<p style="margin-top:14px"><b>Pas foto</b></p><div id="profilFoto"><p class="muted">Memuat pas foto…</p></div>';
+    + '<p style="margin-top:14px"><b>Pas foto</b></p><div id="profilFoto"><p class="muted">Memuat pas foto…</p></div>'
+    + (!S.fotoPath ? '<p class="muted" style="margin-top:6px">Pas foto belum dilengkapi — lengkapi di sini supaya pemilik bisa mengenali Anda.</p>' : '')
+    + '<label for="profilFotoFile">Pas foto wajah (foto dari kamera atau galeri)</label>'
+    + '<input type="file" id="profilFotoFile" accept="image/*">'
+    + '<div class="row" style="margin-top:12px"><button type="button" class="kecil" data-simpan-pasfoto-profil="1">Simpan pas foto</button></div>';
   return html;
+}
+/* Pas foto dilengkapi/diganti nanti dari Profil (dipakai pegawai
+   yang masuk lewat "Lanjutkan tanpa foto dulu" di gerbang). */
+async function simpanPasFotoDariProfil(){
+  var file = berkasDipilih("profilFotoFile");
+  var hasil = await unggahPasFoto(file, false);
+  if(!hasil.ok) return hasil;
+  await isiFotoProfil();
+  tampilPopup("Pas foto tersimpan","Terima kasih — pas foto Anda sudah tersimpan. Pemilik usaha kini bisa mengenali Anda.");
+  return hasil;
 }
 async function muatProfil(){
   var box = el("profilIsi");
-  if(!S.sops.length && !S.namaUsaha){
-    var hasil = await muatSop();
-    if(!hasil.ok){ box.innerHTML = '<p class="muted">Profil belum bisa dimuat.</p>'; return hasil; }
-    tampilLayar("profil");
-  }
+  /* Daftar SOP selalu dimuat ulang dari cloud setiap kali layar ini
+     dibuka, supaya nama usaha dan peran tidak memakai data lama. */
+  var hasil = await muatSop();
+  if(!hasil.ok){ box.innerHTML = '<p class="muted">Profil belum bisa dimuat.</p>'; return hasil; }
+  tampilLayar("profil");
   box.innerHTML = htmlProfil();
   await isiFotoProfil();
   return {ok:true};
@@ -3250,8 +3536,8 @@ async function isiFotoProfil(){
   if(!S.fotoPath){ wadah.innerHTML = '<p class="muted">Pas foto belum ada.</p>'; return; }
   var url = await fotoUrl(S.fotoPath);
   wadah.innerHTML = url
-    ? '<img src="' + esc(url) + '" alt="Pas foto Anda" class="pasfoto-mini">'
-    : '<p class="muted">Pas foto belum bisa ditampilkan — periksa koneksi Anda, lalu buka lagi layar ini.</p>';
+    ? '<img src="' + esc(url) + '" alt="Pas foto Anda" class="pasfoto-mini" data-foto-path="' + esc(S.fotoPath) + '">'
+    : htmlFotoGagal(S.fotoPath);
 }
 
 /* Pratinjau pas foto yang baru dipilih (hanya di HP pegawai sendiri). */
@@ -3265,6 +3551,38 @@ function pratinjauBerkas(idInput, idWadah){
   wadah.innerHTML = url
     ? '<img src="' + esc(url) + '" alt="Pratinjau pas foto" class="pasfoto-mini">'
     : '<p class="muted">Dipilih: ' + esc(f.name || "foto") + '</p>';
+}
+
+/* Format pemisah ribuan untuk kolom Jumlah (Rp): saat mengetik,
+   "50000" menjadi "50.000". kirimKwitansi mengambil hanya angkanya. */
+function formatRibuan(nilai){
+  var angka = String(nilai || "").replace(/[^0-9]/g, "");
+  if(!angka) return "";
+  return Number(angka).toLocaleString("id-ID");
+}
+
+/* Periksa akses pegawai saat tab kembali fokus/terlihat: bila
+   pemilik sudah menonaktifkan atau menghapus pegawai itu, beri tahu
+   dengan jelas dan keluarkan — jangan biarkan tetap memakai
+   aplikasi. Dijaga paling cepat 30 detik sekali; galat pengaturan
+   cloud (bukan penolakan akses) tidak mengeluarkan siapa pun. */
+async function periksaAksesSaatFokus(){
+  if(!S.user || !S.email) return {ok:false, dilewat:true};
+  var kini = Date.now();
+  if(kini - (S.aksesCekTerakhir || 0) < 30000) return {ok:false, dilewat:true};
+  S.aksesCekTerakhir = kini;
+  var akses = await periksaAkses(S.email);
+  if(akses.ok){
+    if(akses.nama) S.nama = akses.nama;
+    if(Array.isArray(akses.peran)) S.peran = akses.peran;
+    if(akses.fotoPath !== undefined) S.fotoPath = akses.fotoPath || null;
+    if(akses.pemilikId) S.pemilikId = akses.pemilikId;
+    return {ok:true};
+  }
+  if(akses.alasan !== "tidak-terdaftar") return {ok:false, alasan:akses.alasan};
+  await keluar();
+  tampilPopup("Akses pegawai sudah tidak aktif", "Akses pegawai Anda sudah tidak aktif atau sudah dihapus pemilik usaha, jadi Anda dikeluarkan dari aplikasi.\nHubungi pemilik usaha bila ini keliru.");
+  return {ok:false, ditolak:true};
 }
 
 /* ===== Init & event ===== */
@@ -3294,11 +3612,31 @@ function bindEvents(){
     if(hasil.ok){ el("lapKwitJumlah").value = ""; el("lapKwitKet").value = ""; el("lapKwitFotoFile").value = ""; el("lapKwitFotoNama").textContent = ""; el("lapKwitSop").value = ""; }
   });
   el("btnSimpanPasFoto").addEventListener("click", simpanPasFotoDariGer);
+  el("btnKonfirmasiYa").addEventListener("click", function(){ jawabKonfirmasi(true); });
+  el("btnKonfirmasiBatal").addEventListener("click", function(){ jawabKonfirmasi(false); });
+  el("konfirmasiOverlay").addEventListener("click", function(e){ if(e.target === el("konfirmasiOverlay")) jawabKonfirmasi(false); });
+  el("lapKwitJumlah").addEventListener("input", function(){ this.value = formatRibuan(this.value); });
+  el("btnLewatiPasFoto").addEventListener("click", lewatiPasFoto);
   el("btnKeluarGer").addEventListener("click", keluar);
   el("btnPresMasuk").addEventListener("click", async function(){ await catatPresensi("masuk"); });
   el("btnPresPulang").addEventListener("click", async function(){ await catatPresensi("pulang"); });
   el("btnMuatCek").addEventListener("click", muatPerluDicek);
   el("btnMuatPres").addEventListener("click", muatPresensi);
+  el("btnMuatSop").addEventListener("click", function(){ muatSop(); });
+  el("btnMuatLaporan").addEventListener("click", function(){ muatLaporan(); });
+  /* Tautan foto hanya berlaku 1 jam — saat tab kembali fokus atau
+     terlihat lagi, minta tautan baru untuk foto yang sedang tampil,
+     dan periksa ulang akses pegawai (bila dinonaktifkan/dihapus,
+     pegawai dikeluarkan dengan pesan jelas). */
+  document.addEventListener("visibilitychange", function(){ if(!document.hidden){ segarkanFoto(); periksaAksesSaatFokus(); } });
+  window.addEventListener("focus", function(){ segarkanFoto(); periksaAksesSaatFokus(); });
+  /* Gambar gagal dimuat (tautan habis): coba sekali dengan tautan
+     baru, lalu ganti dengan pesan + tombol Muat ulang. Galat muat
+     gambar tidak menggelembung, jadi didengar di fase tangkap. */
+  document.addEventListener("error", function(e){
+    var t = e.target;
+    if(t && t.tagName === "IMG" && t.getAttribute && t.getAttribute("data-foto-path")) fotoGagal(t);
+  }, true);
   el("pasFotoFile").addEventListener("change", function(){ pratinjauBerkas("pasFotoFile", "pasFotoPratinjauWadah"); });
   el("fotoDaftar").addEventListener("change", function(){ pratinjauBerkas("fotoDaftar", "fotoDaftarPratinjau"); });
   el("lapFotoFile").addEventListener("change", function(){ var f = berkasDipilih("lapFotoFile"); el("lapFotoNama").textContent = f ? ("Dipilih: " + (f.name || "foto")) : ""; });
@@ -3320,14 +3658,20 @@ function bindEvents(){
     if(t && t.getAttribute){
       var s = t.getAttribute("data-selesai-sop");
       if(s){ selesaikanSop(s); return; }
+      var bt = t.getAttribute("data-batal-selesai");
+      if(bt){ batalkanSelesai(bt); return; }
+      var pp = t.getAttribute("data-simpan-pasfoto-profil");
+      if(pp){ simpanPasFotoDariProfil(); return; }
       var b = t.getAttribute("data-bantu");
       if(b){ bantuTulis(b); return; }
       var bs = t.getAttribute("data-bantu-sop");
       if(bs){ bantuTulis("sop", bs); return; }
       var sc = t.getAttribute("data-simpan-catatan");
       if(sc){ simpanCatatan(sc); return; }
+      var mf = t.getAttribute("data-muat-foto");
+      if(mf){ muatUlangFoto(t, mf); return; }
       var v = t.getAttribute("data-verifikasi-sop");
-      if(v){ verifikasiSop(v, t.getAttribute("data-verifikasi-email"), t.getAttribute("data-verifikasi-tanggal")); return; }
+      if(v){ tanyaVerifikasiSop(v, t.getAttribute("data-verifikasi-email"), t.getAttribute("data-verifikasi-tanggal"), t.getAttribute("data-verifikasi-nama"), t.getAttribute("data-verifikasi-sop-nama")); return; }
     }
   });
 }
@@ -3447,6 +3791,15 @@ window.__pegawai = {
   htmlLaporanCard:htmlLaporanCard, statusLaporan:statusLaporan,
   cobaSimpanPasFotoDaftar:cobaSimpanPasFotoDaftar, isiFotoProfil:isiFotoProfil,
   muatPerluDicek:muatPerluDicek, verifikasiSop:verifikasiSop,
+  tanyaVerifikasiSop:tanyaVerifikasiSop, mintaKonfirmasi:mintaKonfirmasi,
+  jawabKonfirmasi:jawabKonfirmasi, batalkanSelesai:batalkanSelesai,
+  lewatiPasFoto:lewatiPasFoto, simpanPasFotoDariProfil:simpanPasFotoDariProfil,
+  periksaAksesSaatFokus:periksaAksesSaatFokus, formatRibuan:formatRibuan,
+  statusSop:statusSop, perbaruiKartuSop:perbaruiKartuSop,
+  htmlCekBaris:htmlCekBaris, htmlSopYatim:htmlSopYatim,
+  apakahSopDihapus:apakahSopDihapus,
+  htmlFotoGagal:htmlFotoGagal, fotoGagal:fotoGagal,
+  muatUlangFoto:muatUlangFoto, segarkanFoto:segarkanFoto,
   muatPresensi:muatPresensi, tampilPresensi:tampilPresensi,
   catatPresensi:catatPresensi, simpanCatatan:simpanCatatan,
   bantuTulis:bantuTulis
