@@ -72,6 +72,20 @@ nav.tabbar button.sudah-diklik{background:var(--gold);border-color:var(--gold);c
 .sop-card .kemajuan.selesai{color:var(--ok)}
 textarea.catatan-sop{min-height:64px}
 .cek-baris{background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:12px}
+/* ---------- Utas komentar pemilik ↔ pegawai ----------
+   Satu utas di bawah tiap laporan dan tiap pelaksanaan SOP hari ini.
+   Pesan adalah teks yang ditulis pengguna sendiri (tanpa AI). */
+.utas-pesan{border-top:1px solid var(--line);margin-top:14px;padding-top:12px}
+.utas-pesan h4{color:var(--gold-soft);font-size:.98rem;margin-bottom:8px}
+.pesan-item{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-top:8px}
+.pesan-item.pesan-saya{border-color:var(--gold)}
+.pesan-kepala{display:flex;gap:8px;flex-wrap:wrap;align-items:baseline}
+.pesan-nama{color:var(--gold-soft);font-weight:700;font-size:.92rem}
+.pesan-waktu{color:var(--ink-mut);font-size:.85rem}
+.pesan-belum-dibaca{display:inline-block;background:var(--gold);color:#1a1405;border-radius:999px;padding:1px 10px;font-size:.8rem;font-weight:700}
+.pesan-isi{color:var(--ink);font-size:.95rem;margin-top:4px;white-space:pre-line}
+.pesan-tulis{margin-top:10px}
+.pesan-hitung{color:var(--ink-mut);font-size:.85rem}
 .langkah{display:flex;gap:10px;align-items:flex-start;padding:10px 4px;border-top:1px solid var(--line);cursor:pointer}
 .langkah:first-of-type{margin-top:10px}
 .langkah input[type=checkbox]{width:22px;height:22px;flex:0 0 22px;margin-top:2px;accent-color:var(--gold);cursor:pointer}
@@ -171,6 +185,7 @@ textarea.catatan-sop{min-height:64px}
   <section id="layarDashboard" class="hidden">
     <div class="topbar">
       <p class="siapa" id="infoPeran"></p>
+      <button id="lencanaPesan" type="button" class="ghost kecil hidden">Pesan • 0</button>
       <button id="btnKeluar" type="button" class="ghost kecil">Keluar</button>
     </div>
 
@@ -2344,7 +2359,7 @@ var S = { user:null, email:null, nama:null, peran:[], namaUsaha:null,
   struktur:[],
   pemilikId:null, fotoPath:null, laporan:[],
   perluDicek:[], presensi:null, presensiRiwayat:[], aksesCekTerakhir:0,
-  lewatiPasFoto:false };
+  lewatiPasFoto:false, pesanTersedia:true, pesanBelumDibaca:0 };
 var __client = null;
 function getClient(){
   if(__client) return __client;
@@ -2384,6 +2399,8 @@ function pesanRamah(err){
   var m = String((err && err.message) || err || "");
   if(/hanya pegawai yang terdaftar/i.test(m)) return "Aplikasi ini hanya untuk pegawai yang terdaftar.\nHubungi pemilik usaha bila Anda merasa seharusnya bisa masuk.";
   if(/batas foto hari ini/i.test(m)) return "Batas foto hari ini sudah tercapai (5 foto).\nFoto laporan bisa dikirim lagi besok. Kwitansi tanpa foto tetap bisa dikirim.";
+  if(/pesan terlalu panjang/i.test(m)) return "Pesan terlalu panjang (maksimal 500 karakter).\nSingkatkan pesan Anda, lalu coba lagi.";
+  if(/tidak berhak melihat utas|bukan pegawai pembuat|bukan pegawai pelaksana/i.test(m)) return "Anda belum bisa berkomentar di sini.\nUntuk SOP, komentar bisa ditulis setelah Anda mulai mengerjakan SOP itu hari ini.";
   if(/sop ini sudah diubah\/dihapus/i.test(m)) return "SOP ini sudah diubah atau dihapus pemilik.\nDaftar SOP sudah dimuat ulang — periksa lagi daftarnya.";
   if(/invalid login credentials|invalid email|invalid password/i.test(m)) return "Email atau kata sandi tidak cocok.\nPeriksa lagi ketikan Anda, lalu coba masuk kembali.";
   if(/email not confirmed|not confirmed/i.test(m)) return "Email Anda belum dikonfirmasi.\nBuka email Anda dan ketuk tautan konfirmasi yang kami kirim, lalu masuk kembali.";
@@ -2473,6 +2490,7 @@ async function sesudahMasuk(u){
   }
   tampilDashboard();
   await muatLayarAktif();
+  await muatLencanaPesan();
   return {ok:true};
 }
 async function periksaAkses(email){
@@ -2577,6 +2595,9 @@ async function keluar(){
   S.pemilikId = null; S.fotoPath = null; S.laporan = [];
   S.perluDicek = []; S.presensi = null; S.presensiRiwayat = [];
   S.aksesCekTerakhir = 0; S.lewatiPasFoto = false;
+  S.pesanTersedia = true; S.pesanBelumDibaca = 0;
+  var lencana = el("lencanaPesan");
+  if(lencana) lencana.classList.add("hidden");
   el("layarDashboard").classList.add("hidden");
   el("layarPasFoto").classList.add("hidden");
   el("layarMasuk").classList.remove("hidden");
@@ -2720,7 +2741,16 @@ function htmlSopCard(sop){
     + '<div class="row" style="margin-top:12px">'
     + '<button type="button" class="kecil" data-selesai-sop="' + esc(id) + '"' + (semua ? " disabled" : "") + '>Selesai jalankan SOP</button>'
     + '<button type="button" class="kecil ghost" data-batal-selesai="' + esc(id) + '"' + (semua ? "" : " hidden") + '>Batalkan selesai</button>'
-    + '</div></div>';
+    + '</div>'
+    /* Utas komentar pelaksanaan SOP hari ini — hanya bila sudah ada
+       catatan jalankan hari ini (aturan cloud: utas SOP butuh baris
+       jalankan; sebelum pegawai mulai mengerjakan SOP itu hari ini,
+       tampilkan petunjuknya saja). Kolom catatan verifikasi di atas
+       tidak berubah: utas komentar adalah tambahan. */
+    + (S.jalankan[id]
+        ? htmlUtasPesan("sop_jalankan", kunciUtasSop(id))
+        : '<div class="utas-pesan"><h4>Komentar</h4><p class="muted">Komentar tersedia setelah Anda mulai mengerjakan SOP ini hari ini.</p></div>')
+    + '</div>';
   return html;
 }
 /* Kartu untuk baris jalankan yang SOP-nya sudah tidak ada lagi:
@@ -2772,6 +2802,8 @@ async function muatSop(diam){
     return hasil;
   }
   box.innerHTML = html;
+  /* Utas komentar di kartu SOP yang punya catatan jalankan hari ini. */
+  await muatSemuaUtas(box);
   return hasil;
 }
 /* Mencatat centang ke cloud. dipanggil setiap kali centang berubah,
@@ -3279,6 +3311,7 @@ async function lewatiPasFoto(){
   el("layarPasFoto").classList.add("hidden");
   tampilDashboard();
   await muatLayarAktif();
+  await muatLencanaPesan();
   tampilPopup("Masuk tanpa pas foto", "Anda masuk tanpa pas foto — lengkapi nanti dari Profil bila sudah bisa, supaya pemilik usaha bisa mengenali Anda.");
   return {ok:true, dilewati:true};
 }
@@ -3328,6 +3361,10 @@ async function htmlLaporanCard(r){
     if(url) html += '<div style="margin-top:10px" data-foto-wadah="' + esc(r.file_path) + '"><img src="' + esc(url) + '" alt="Foto laporan" class="lap-thumb" data-foto-path="' + esc(r.file_path) + '"></div>';
     else html += '<div style="margin-top:10px" data-foto-wadah="' + esc(r.file_path) + '">' + htmlFotoGagal(r.file_path) + '</div>';
   }
+  /* Utas komentar laporan ini (pemilik ↔ pegawai yang membuat
+     laporan). Hanya laporan pegawai ini yang tampil di layar ini,
+     jadi utasnya pun hanya milik pegawai ini. */
+  html += htmlUtasPesan("laporan", String(r.id));
   html += '</div>';
   return html;
 }
@@ -3364,6 +3401,8 @@ async function muatLaporan(){
   var html = "";
   for(var i = 0; i < rows.length; i++){ html += await htmlLaporanCard(rows[i]); }
   box.innerHTML = html;
+  /* Utas komentar di tiap kartu laporan. */
+  await muatSemuaUtas(box);
   return {ok:true, data:rows};
 }
 /* Pengaman kirim ganda (sisi klien): selama satu kiriman sedang
@@ -3438,6 +3477,194 @@ async function kirimKwitansi(jumlah, keterangan, sopId, file){
     sedangKirimKwitansi = false;
     aturTombolKirim("btnKirimKwitansi", false, "Kirim kwitansi");
   }
+}
+
+/* ===== Pesan: komentar pemilik ↔ pegawai ===== */
+/* Pesan adalah TEKS yang ditulis pengguna sendiri — AI tidak
+   dilibatkan di sini. Satu utas = satu laporan (konteks 'laporan',
+   id laporan) atau satu pelaksanaan SOP hari ini (konteks
+   'sop_jalankan', kunci "email pegawai|sop_id|YYYY-MM-DD" tanggal
+   lokal hari ini). Aturan "siapa boleh bicara dengan siapa"
+   ditegakkan di cloud lewat RPC; aplikasi hanya menampilkan utas
+   milik pegawai yang masuk (laporan/SOP pegawai lain tidak pernah
+   tampil di layar ini). Bila RPC pesan belum ada di cloud
+   (pengaturan pesan belum dijalankan pemilik), utas menampilkan
+   "Fitur pesan belum aktif" — bukan galat mentah. */
+var BATAS_PESAN = 500;
+function duaDigit(n){ return (n < 10 ? "0" : "") + n; }
+function tanggalLokalHariIni(){
+  var d = new Date();
+  return d.getFullYear() + "-" + duaDigit(d.getMonth() + 1) + "-" + duaDigit(d.getDate());
+}
+function kunciUtasSop(sopId){
+  return String(S.email || "").toLowerCase() + "|" + String(sopId) + "|" + tanggalLokalHariIni();
+}
+/* Waktu pesan format Indonesia, mis. "17 Nov 2026, 06:30" (jam
+   lokal perangkat, pemisah titik dua supaya sama di semua peramban). */
+function fmtWaktuPesan(t){
+  if(!t) return "—";
+  try{
+    var d = new Date(t);
+    if(isNaN(d.getTime())) return "—";
+    var bulan = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
+    return d.getDate() + " " + bulan[d.getMonth()] + " " + d.getFullYear() + ", " + duaDigit(d.getHours()) + ":" + duaDigit(d.getMinutes());
+  }catch(e){ return "—"; }
+}
+function htmlUtasPesan(konteks, konteksId){
+  var kunci = konteks + "::" + konteksId;
+  return '<div class="utas-pesan" data-utas-konteks="' + esc(konteks) + '" data-utas-id="' + esc(konteksId) + '">'
+    + '<h4>Komentar</h4>'
+    + '<div data-utas-isi="' + esc(kunci) + '"><p class="muted">Memuat komentar…</p></div>'
+    + '<div class="pesan-tulis">'
+    + '<label for="pesan-' + esc(kunci) + '">Tulis komentar untuk pemilik usaha</label>'
+    + '<input type="text" class="pesan-input" id="pesan-' + esc(kunci) + '" data-pesan-konteks="' + esc(konteks) + '" data-pesan-id="' + esc(konteksId) + '" maxlength="500" placeholder="contoh: Terima kasih, sudah saya perbaiki.">'
+    + '<p class="muted" style="margin-top:4px"><span class="pesan-hitung" data-pesan-hitung="' + esc(kunci) + '">0/500</span> karakter (maksimal 500)</p>'
+    + '<div class="row" style="margin-top:8px">'
+    + '<button type="button" data-kirim-pesan="' + esc(kunci) + '">Kirim</button>'
+    + '<button type="button" class="kecil ghost" data-muat-utas="' + esc(kunci) + '">Muat ulang</button>'
+    + '</div></div></div>';
+}
+function htmlPesanItem(m){
+  var saya = String(m.pengirim_email || "").toLowerCase() === String(S.email || "").toLowerCase();
+  var belumDibaca = !saya && m.dibaca === false;
+  return '<div class="pesan-item' + (saya ? " pesan-saya" : "") + '">'
+    + '<p class="pesan-kepala"><span class="pesan-nama">' + esc(m.pengirim_nama || "—") + '</span>'
+    + '<span class="pesan-waktu">' + esc(fmtWaktuPesan(m.dibuat_pada)) + '</span>'
+    + (belumDibaca ? '<span class="pesan-belum-dibaca">Belum dibaca</span>' : '')
+    + '</p><p class="pesan-isi">' + esc(m.isi || "") + '</p></div>';
+}
+function cariUtas(konteks, konteksId){
+  var semua = document.querySelectorAll(".utas-pesan[data-utas-konteks]");
+  for(var i = 0; i < semua.length; i++){
+    if(semua[i].getAttribute("data-utas-konteks") === konteks
+      && semua[i].getAttribute("data-utas-id") === konteksId) return semua[i];
+  }
+  return null;
+}
+async function muatUtas(konteks, konteksId, wadah){
+  if(!wadah) wadah = cariUtas(konteks, konteksId);
+  if(!wadah) return {ok:false};
+  var isiBox = wadah.querySelector("[data-utas-isi]");
+  if(!isiBox) return {ok:false};
+  if(S.pesanTersedia === false){
+    isiBox.innerHTML = '<p class="muted">Fitur pesan belum aktif.</p>';
+    return {ok:false, belumAktif:true};
+  }
+  var c = getClient();
+  if(!c){ isiBox.innerHTML = '<p class="muted">Fitur pesan belum aktif.</p>'; return {ok:false, setup:true}; }
+  var r;
+  try{ r = await c.rpc("pesan_konteks", {p_konteks: konteks, p_konteks_id: konteksId}); }
+  catch(e){
+    if(apakahErrorSetup(e)){ S.pesanTersedia = false; isiBox.innerHTML = '<p class="muted">Fitur pesan belum aktif.</p>'; return {ok:false, belumAktif:true, error:e}; }
+    isiBox.innerHTML = '<p class="muted">Komentar belum bisa dimuat.</p>'; return {ok:false, error:e};
+  }
+  if(r.error){
+    if(apakahErrorSetup(r.error)){ S.pesanTersedia = false; isiBox.innerHTML = '<p class="muted">Fitur pesan belum aktif.</p>'; return {ok:false, belumAktif:true, error:r.error}; }
+    if(/tidak berhak melihat utas/i.test(String(r.error.message || ""))){
+      isiBox.innerHTML = '<p class="muted">Komentar tersedia setelah Anda mulai mengerjakan SOP ini hari ini.</p>';
+      return {ok:false, error:r.error};
+    }
+    isiBox.innerHTML = '<p class="muted">Komentar belum bisa dimuat.</p>'; return {ok:false, error:r.error};
+  }
+  var daftar = Array.isArray(r.data) ? r.data : [];
+  isiBox.innerHTML = daftar.length
+    ? daftar.map(htmlPesanItem).join("")
+    : '<p class="muted">Belum ada komentar.</p>';
+  /* Utas dibuka: tandai pesan masuk yang belum dibaca sebagai
+     dibaca, lalu segarkan lencana. */
+  var tandai = [];
+  daftar.forEach(function(m){
+    if(m && m.dibaca === false && m.id
+      && String(m.pengirim_email || "").toLowerCase() !== String(S.email || "").toLowerCase()){
+      tandai.push(m.id);
+    }
+  });
+  if(tandai.length){
+    await Promise.all(tandai.map(function(id){
+      return c.rpc("tandai_pesan_dibaca", {p_id: id}).catch(function(){ return null; });
+    }));
+    await muatLencanaPesan();
+  }
+  return {ok:true, data:daftar};
+}
+async function muatSemuaUtas(akar){
+  var wadah = akar || document;
+  var daftar = Array.prototype.slice.call(wadah.querySelectorAll(".utas-pesan[data-utas-konteks]"));
+  for(var i = 0; i < daftar.length; i++){
+    await muatUtas(daftar[i].getAttribute("data-utas-konteks"), daftar[i].getAttribute("data-utas-id"), daftar[i]);
+  }
+  return {ok:true, jumlah:daftar.length};
+}
+var sedangKirimPesan = {};
+function aturTombolPesan(kunci, sedang){
+  var b = document.querySelector('[data-kirim-pesan="' + kunci + '"]');
+  if(!b) return;
+  b.disabled = sedang;
+  b.textContent = sedang ? "Mengirim…" : "Kirim";
+}
+function perbaruiHitungPesan(inp){
+  if(!inp) return;
+  var kunci = inp.getAttribute("data-pesan-konteks") + "::" + inp.getAttribute("data-pesan-id");
+  var span = document.querySelector('[data-pesan-hitung="' + kunci + '"]');
+  if(span) span.textContent = String((inp.value || "").length) + "/500";
+}
+async function kirimPesan(konteks, konteksId, isi){
+  isi = String(isi || "").trim();
+  if(!isi){ tampilPopup("Pesan masih kosong", "Tulis komentar Anda dulu, lalu ketuk Kirim."); return {ok:false}; }
+  if(isi.length > BATAS_PESAN){ tampilPopup("Pesan terlalu panjang", "Pesan terlalu panjang (maksimal 500 karakter).\nSingkatkan pesan Anda, lalu coba lagi."); return {ok:false}; }
+  var kunci = konteks + "::" + konteksId;
+  if(sedangKirimPesan[kunci]) return {ok:false, ganda:true};
+  if(S.pesanTersedia === false){ tampilPopup("Fitur pesan belum aktif", "Fitur pesan belum aktif — pengaturan pesan di cloud belum dijalankan. Coba lagi nanti."); return {ok:false, belumAktif:true}; }
+  var c = getClient();
+  if(!c){ tampilPopup("Fitur pesan belum aktif", "Fitur pesan belum aktif — pengaturan cloud belum dijalankan. Coba lagi nanti."); return {ok:false, setup:true}; }
+  sedangKirimPesan[kunci] = true;
+  aturTombolPesan(kunci, true);
+  try{
+    var r = await c.rpc("kirim_pesan", {p_konteks: konteks, p_konteks_id: konteksId, p_penerima: null, p_isi: isi});
+    if(r.error){
+      if(apakahErrorSetup(r.error)){ S.pesanTersedia = false; tampilPopup("Fitur pesan belum aktif", "Fitur pesan belum aktif — pengaturan pesan di cloud belum dijalankan. Coba lagi nanti."); return {ok:false, belumAktif:true, error:r.error}; }
+      tampilPopup("Pesan belum terkirim", pesanRamah(r.error)); return {ok:false, error:r.error};
+    }
+    var wadah = cariUtas(konteks, konteksId);
+    if(wadah){
+      var inp = wadah.querySelector(".pesan-input");
+      if(inp){ inp.value = ""; perbaruiHitungPesan(inp); }
+    }
+    await muatUtas(konteks, konteksId, wadah);
+    return {ok:true, data:r.data};
+  }catch(e){
+    if(apakahErrorSetup(e)){ S.pesanTersedia = false; tampilPopup("Fitur pesan belum aktif", "Fitur pesan belum aktif — pengaturan pesan di cloud belum dijalankan. Coba lagi nanti."); return {ok:false, belumAktif:true, error:e}; }
+    tampilPopup("Pesan belum terkirim", pesanRamah(e)); return {ok:false, error:e};
+  }finally{
+    sedangKirimPesan[kunci] = false;
+    aturTombolPesan(kunci, false);
+  }
+}
+/* Lencana "Pesan • N" di bilah atas: jumlah pesan belum dibaca
+   untuk pegawai yang masuk. Hanya tampil bila N > 0; ketuk lencana
+   membuka layar Laporan. Tidak dipanggil bila belum masuk. */
+async function muatLencanaPesan(){
+  var lencana = el("lencanaPesan");
+  if(!lencana) return {ok:false};
+  if(!S.user || !S.email){ lencana.classList.add("hidden"); return {ok:false, belumMasuk:true}; }
+  if(S.pesanTersedia === false){ lencana.classList.add("hidden"); return {ok:false, belumAktif:true}; }
+  var c = getClient();
+  if(!c){ lencana.classList.add("hidden"); return {ok:false, setup:true}; }
+  var r;
+  try{ r = await c.rpc("pesan_belum_dibaca", {}); }
+  catch(e){
+    if(apakahErrorSetup(e)){ S.pesanTersedia = false; }
+    lencana.classList.add("hidden"); return {ok:false, error:e};
+  }
+  if(r.error){
+    if(apakahErrorSetup(r.error)){ S.pesanTersedia = false; }
+    lencana.classList.add("hidden"); return {ok:false, error:r.error};
+  }
+  var n = Number(r.data) || 0;
+  S.pesanBelumDibaca = n;
+  if(n > 0){ lencana.textContent = "Pesan • " + n; lencana.classList.remove("hidden"); }
+  else { lencana.classList.add("hidden"); }
+  return {ok:true, jumlah:n};
 }
 
 /* ===== Layar 2: Peran Saya ===== */
@@ -3602,6 +3829,10 @@ function bindEvents(){
   el("btnSimpanSandi").addEventListener("click", async function(){ await simpanSandiBaru(el("sandiBaru").value, el("sandiBaru2").value); });
   el("btnKeluar").addEventListener("click", keluar);
   el("btnKeluarProfil").addEventListener("click", keluar);
+  el("lencanaPesan").addEventListener("click", async function(){
+    tampilLayar("laporan");
+    await muatLaporan();
+  });
   el("btnSalinSql").addEventListener("click", salinSql);
   el("btnKirimFoto").addEventListener("click", async function(){
     var hasil = await kirimLaporanFoto(el("lapFotoKet").value, el("lapFotoSop").value, berkasDipilih("lapFotoFile"));
@@ -3627,9 +3858,10 @@ function bindEvents(){
   /* Tautan foto hanya berlaku 1 jam — saat tab kembali fokus atau
      terlihat lagi, minta tautan baru untuk foto yang sedang tampil,
      dan periksa ulang akses pegawai (bila dinonaktifkan/dihapus,
-     pegawai dikeluarkan dengan pesan jelas). */
-  document.addEventListener("visibilitychange", function(){ if(!document.hidden){ segarkanFoto(); periksaAksesSaatFokus(); } });
-  window.addEventListener("focus", function(){ segarkanFoto(); periksaAksesSaatFokus(); });
+     pegawai dikeluarkan dengan pesan jelas). Lencana pesan ikut
+     disegarkan supaya jumlah belum dibaca selalu baru. */
+  document.addEventListener("visibilitychange", function(){ if(!document.hidden){ segarkanFoto(); periksaAksesSaatFokus(); muatLencanaPesan(); } });
+  window.addEventListener("focus", function(){ segarkanFoto(); periksaAksesSaatFokus(); muatLencanaPesan(); });
   /* Gambar gagal dimuat (tautan habis): coba sekali dengan tautan
      baru, lalu ganti dengan pesan + tombol Muat ulang. Galat muat
      gambar tidak menggelembung, jadi didengar di fase tangkap. */
@@ -3653,9 +3885,29 @@ function bindEvents(){
       ubahCentang(t);
     }
   });
+  /* Hitung karakter kolom pesan (maksimal 500) saat mengetik. */
+  document.addEventListener("input", function(e){
+    var t = e.target;
+    if(t && t.classList && t.classList.contains("pesan-input")) perbaruiHitungPesan(t);
+  });
   document.addEventListener("click", function(e){
     var t = e.target;
     if(t && t.getAttribute){
+      var kp = t.getAttribute("data-kirim-pesan");
+      if(kp){
+        var p0 = kp.indexOf("::");
+        var wadahPesan = t.closest ? t.closest(".utas-pesan") : null;
+        var inpPesan = wadahPesan ? wadahPesan.querySelector(".pesan-input") : null;
+        kirimPesan(kp.slice(0, p0), kp.slice(p0 + 2), inpPesan ? inpPesan.value : "");
+        return;
+      }
+      var mu = t.getAttribute("data-muat-utas");
+      if(mu){
+        var p1 = mu.indexOf("::");
+        var wadahUtas = t.closest ? t.closest(".utas-pesan") : null;
+        muatUtas(mu.slice(0, p1), mu.slice(p1 + 2), wadahUtas);
+        return;
+      }
       var s = t.getAttribute("data-selesai-sop");
       if(s){ selesaikanSop(s); return; }
       var bt = t.getAttribute("data-batal-selesai");
@@ -3711,7 +3963,7 @@ else { init(); }
    pindah panel masuk/daftar (ID_NAVIGASI di bawah). */
 (function(){
   var KUNCI_TOMBOL = "pegawai-tombol-diklik:v1";
-  var ID_NAVIGASI = [];
+  var ID_NAVIGASI = ["lencanaPesan"];
   function bacaSet(){ try{ var s = localStorage.getItem(KUNCI_TOMBOL); if(!s) return {}; var o = JSON.parse(s); return (o && typeof o === "object") ? o : {}; }catch(e){ return {}; } }
   function simpanSet(o){ try{ localStorage.setItem(KUNCI_TOMBOL, JSON.stringify(o)); }catch(e){} }
   function bolehDitandai(el){
@@ -3802,7 +4054,12 @@ window.__pegawai = {
   muatUlangFoto:muatUlangFoto, segarkanFoto:segarkanFoto,
   muatPresensi:muatPresensi, tampilPresensi:tampilPresensi,
   catatPresensi:catatPresensi, simpanCatatan:simpanCatatan,
-  bantuTulis:bantuTulis
+  bantuTulis:bantuTulis,
+  muatUtas:muatUtas, muatSemuaUtas:muatSemuaUtas, kirimPesan:kirimPesan,
+  muatLencanaPesan:muatLencanaPesan, htmlUtasPesan:htmlUtasPesan,
+  htmlPesanItem:htmlPesanItem, fmtWaktuPesan:fmtWaktuPesan,
+  kunciUtasSop:kunciUtasSop, tanggalLokalHariIni:tanggalLokalHariIni,
+  perbaruiHitungPesan:perbaruiHitungPesan, BATAS_PESAN:BATAS_PESAN
 };
 </script>
 </body>
